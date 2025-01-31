@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Code Parser</title>
+    <link href="output.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/styles/default.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/highlight.min.js"></script>
+    <!-- <script src="https://unpkg.com/@tailwindcss/browser@4"></script> -->
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+        }
+
+        #page-container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        #content-wrap {
+            flex: 1;
+            overflow-y: auto;
+            padding-bottom: 4rem;
+        }
+
+        .custom-shadow {
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .arrow {
+            width: 50px;
+            height: 2px;
+            background-color: #4A5568;
+            position: relative;
+            top: 20px; /* Adjust this based on the height of the boxes to vertically center it */
+        }
+        .arrow::after {
+            content: '';
+            position: absolute;
+            top: -4px;
+            right: 0;
+            border-width: 5px;
+            border-style: solid;
+            border-color: transparent transparent transparent #4A5568;
+        }
+    </style>
+
+    <script>
+        function openPopup(id) {
+            const popup = document.getElementById(id);
+            popup.classList.remove("hidden");
+            document.body.classList.add("overflow-hidden");
+        }
+
+        function closePopup(id) {
+            const popup = document.getElementById(id);
+            popup.classList.add("hidden");
+            document.body.classList.remove("overflow-hidden");
+        }
+    </script>
+</head>
+<body class="bg-gray-100">
+    <div id="about" class="hidden fixed top-0 left-0 right-0 bottom-0 bg-gray-900/50 flex items-center justify-center z-20 transition-opacity duration-300 ease-in-out">
+        <div class="bg-white p-6 rounded-lg max-w-md custom-shadow">
+            <h2 class="text-2xl font-bold text-gray-800">About</h2>
+            <p class="mt-4 text-gray-600 text-justify">
+              This website showcases an (incomplete) implementation of a code completion system based on the Qwen2.5-Coder family of models. It contains a VSCode extension that sends code snippets to a server, which then returns a single line
+              completion suggestion. The server is implemented in Python using a custom API server for logins, and a custom message queue for handling requests from multiple clients into a single thread for running the model on GPU. The client
+              is implemented in TypeScript using the VSCode extension development API, and additionally contains some custom GUIs for displaying differences between two code snippets for comparison.
+            </p>
+            <button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600" onclick="closePopup('about')">Close</button>
+        </div>
+    </div>
+
+    <div id="page-container" class="flex flex-col min-h-screen">
+        <header class="bg-white shadow fixed top-0 left-0 right-0 z-10">
+            <div class="container mx-auto px-6 py-4">
+                <div class="flex justify-between items-center">
+                    <a class="text-xl font-bold text-gray-800" href="index.html">Relevant Repos for a Custom Copilot Extension</a>
+                    <div class="flex space-x-4">
+                        <a href="./index.html" class="px-3 py-2 text-gray-800 text-sm hover:text-indigo-500 cursor-pointer">Back</a>
+                        <a class="px-3 py-2 text-gray-800 text-sm hover:text-indigo-500 cursor-pointer" onclick="openPopup('about')">About</a>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <div id="content-wrap" class="mt-16 mb-16">
+            <section class="container mx-auto px-6 py-10">
+                <div class="flex flex-col space-y-6">
+                    <h1 class="text-3xl font-bold text-gray-800">TypeScript and Python code parser</h1>
+                    <p class="text-gray-600 mt-2 text-justify">This is a code parser to parse Python and TypeScript source codes into
+                        an abstract syntax tree (AST) written in TypeScript, and also contains a "unifying" method to compress
+                        the AST into a more compact representation by removing the actual implementations of the method bodies,
+                        with the original goal of allowing code completion LLMs to better handle long context. The "intuition"
+                        is that actual coders do not need to see the implementation of a method to understand what it does, the
+                        method signature, docstring and type hints are usually enough. The code parser is implemented in TypeScript
+                        for compability with the VSCode extension API.
+                    </p>
+
+                    <h2 class="text-2xl font-bold text-gray-800">Overview</h2>
+                    <p>
+                        The source code is handled with the following pipeline:
+                    </p>
+                    <div class="flex items-center space-x-4">
+                        <div class="bg-white shadow-lg p-6 rounded-lg">
+                            <h2 class="text-lg font-bold">Tokenizer</h2>
+                            <p>Converts the source code into tokens so it can be handled more easily by the parser.</p>
+                        </div>
+                        <div class="arrow"></div>
+                        <div class="bg-white shadow-lg p-6 rounded-lg">
+                            <h2 class="text-lg font-bold">Parser</h2>
+                            <p>A recursive descent parser that attempts to match a grammar's production rules, converting code to AST.</p>
+                        </div>
+                        <div class="arrow"></div>
+                        <div class="bg-white shadow-lg p-6 rounded-lg">
+                            <h2 class="text-lg font-bold">ASTTokenizer</h2>
+                            <p>Given the AST representing the code, reconstructs the code along with the AST structure.</p>
+                        </div>
+                    </div>
+
+                    <h3 class="text-1xl font-bold text-gray-800">Tokenizer</h3>
+                    <p>
+                        The requirements of the tokenizer is implemented in the <a href="" class="text-indigo-500 hover:text-indigo-600 hover:underline">AbstractTokenizer</a> class, which is
+                        a state machine that takes in the source code character by character, and supports lookahead of handling
+                        special cases such as triple string literals """ in Python. The language specific tokenizer implementations
+                        are implemented in the <a href="" class="text-indigo-500 hover:text-indigo-600 hover:underline">PythonTokenizer</a> and <a href="" class="text-indigo-500 hover:text-indigo-600 hover:underline">TypeScriptTokenizer</a> classes.
+                    </p>
+
+                    <h3 class="text-1xl font-bold text-gray-800">Parser</h3>
+                    <p>
+                        The parser is implemented in the <a class="text-indigo-500 hover:text-indigo-600 hover:underline" href="" class="text-indigo-500 hover:text-indigo-600 hover:underline">AbstractParser</a> class, which is a recursive descent parser that
+                        defines common structures (non-terminal symbols) such as Class, FunctionDeclaration, and the rough rules of the
+                        "abstract" language agnostic grammar. The language specific parser implementations are implemented in the
+                        <a href="" class="text-indigo-500 hover:text-indigo-600 hover:underline">PythonParser</a> and
+                        <a href="" class="text-indigo-500 hover:text-indigo-600 hover:underline">TypeScriptParser</a> classes, which adheres to the rules given by
+                        AbstractParser, and contains language-specific transformations from the tokens to the AST.
+                    </p>
+
+                    <h3 class="text-1xl font-bold text-gray-800">ASTTokenizer</h3>
+                    <p>
+                        This is an reverse operation that converts the AST back to a stream of tokens, given by an abstract class <a href="" class="text-indigo-500 hover:text-indigo-600 hover:underline">ASTGenericTokenizer</a>.
+                        The <a href="" class="text-indigo-500 hover:text-indigo-600 hover:underline">ASTFaithfulTokenizer</a> is a language-agnostic conversion class that converts the AST to its original code form, highlighting
+                        the tree structure that is constructed from the original code. The <a href="" class="text-indigo-500 hover:text-indigo-600 hover:underline">PythonSimplificationTokenizer</a> and <a href="" class="text-indigo-500 hover:text-indigo-600 hover:underline">TypeScriptSimplificationTokenizer</a>
+                        are conversion classes that is able to ignore function bodies, while keeping the rest of the information in the AST (such as comments) intact, thereby
+                        compressing the context required for the LLM code completion models.
+                    </p>
+                    
+                    <h2 class="text-2xl font-bold text-gray-800">Source repo</h2>
+                    <p>
+                        The repo for the relevant code is in <a href="" class="text-indigo-500 hover:text-indigo-600 hover:underline">GitHub</a>.
+                    </p>
+
+                    <h2 class="text-2xl font-bold text-gray-800">Interactive demonstration</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 p-5">
+                        <a href="#" class="bg-white shadow-lg p-4 rounded-lg hover:bg-gray-50 transition-colors flex flex-col">
+                            <h2 class="text-lg font-bold">Python Parser</h2>
+                            <p class="flex-1">Try the Python parser!</p>
+                        </a>
+                        <a href="#" class="bg-white shadow-lg p-4 rounded-lg hover:bg-gray-50 transition-colors flex flex-col">
+                            <h2 class="text-lg font-bold">Python Tokenizer</h2>
+                            <p class="flex-1">Try the Python Tokenizer!</p>
+                        </a>
+                        <a href="#" class="bg-white shadow-lg p-4 rounded-lg hover:bg-gray-50 transition-colors flex flex-col">
+                            <h2 class="text-lg font-bold">Typescript Parser</h2>
+                            <p class="flex-1">Try the Typescript parser!</p>
+                        </a>
+                        <a href="#" class="bg-white shadow-lg p-4 rounded-lg hover:bg-gray-50 transition-colors flex flex-col">
+                            <h2 class="text-lg font-bold">Typescript Tokenizer</h2>
+                            <p class="flex-1">Try the Typescript tokenizer!</p>
+                        </a>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <footer class="bg-white shadow fixed bottom-0 left-0 right-0 z-10">
+            <div class="container mx-auto px-6 py-4">
+                <p class="text-center text-gray-800">© 2025 CHAU Yu Hei</p>
+            </div>
+        </footer>
+    </div>
+    <script>
+        hljs.highlightAll();
+    </script>
+</body>
+</html>
