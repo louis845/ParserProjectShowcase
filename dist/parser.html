@@ -8,7 +8,6 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/styles/default.min.css">
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/highlight.min.js"></script>
-    <!-- <script src="https://unpkg.com/@tailwindcss/browser@4"></script> -->
     <style>
         html, body {
             height: 100%;
@@ -80,7 +79,7 @@
         <header class="bg-white shadow fixed top-0 left-0 right-0 z-10">
             <div class="container mx-auto px-6 py-4">
                 <div class="flex justify-between items-center">
-                    <a class="text-xl font-bold text-gray-800" href="index.html">Relevant Repos for a Custom Copilot Extension</a>
+                    <a class="text-xl font-bold text-gray-800" href="">Parser Project Showcase</a>
                     <div class="flex space-x-4">
                         <a href="./index.html" class="px-3 py-2 text-gray-800 text-sm hover:text-indigo-500 cursor-pointer">Back</a>
                         <a class="px-3 py-2 text-gray-800 text-sm hover:text-indigo-500 cursor-pointer" onclick="openPopup('about')">About</a>
@@ -125,51 +124,51 @@
 
                     <h3 class="text-1xl font-bold text-gray-800">Tokenizer</h3>
                     <p>
-                        The requirements of the tokenizer is implemented in the <a href="" class="text-indigo-500 hover:text-indigo-600 hover:underline">AbstractTokenizer</a> class, which is
+                        The requirements of the tokenizer is implemented in the <a href="https://github.com/louis845/WebASTParser/blob/main/src/parsing/AbstractTokenizer.ts" class="text-indigo-500 hover:text-indigo-600 hover:underline">AbstractTokenizer</a> class, which is
                         a state machine that takes in the source code character by character, and supports lookahead of handling
                         special cases such as triple string literals """ in Python. The language specific tokenizer implementations
-                        are implemented in the <a href="" class="text-indigo-500 hover:text-indigo-600 hover:underline">PythonTokenizer</a> and <a href="" class="text-indigo-500 hover:text-indigo-600 hover:underline">TypeScriptTokenizer</a> classes.
+                        are implemented in the <a href="https://github.com/louis845/WebASTParser/blob/main/src/impl/python/PythonTokenizer.ts" class="text-indigo-500 hover:text-indigo-600 hover:underline">PythonTokenizer</a> and <a href="https://github.com/louis845/WebASTParser/blob/main/src/impl/typescript/TypeScriptTokenizer.ts" class="text-indigo-500 hover:text-indigo-600 hover:underline">TypeScriptTokenizer</a> classes.
                     </p>
 
                     <h3 class="text-1xl font-bold text-gray-800">Parser</h3>
                     <p>
-                        The parser is implemented in the <a class="text-indigo-500 hover:text-indigo-600 hover:underline" href="" class="text-indigo-500 hover:text-indigo-600 hover:underline">AbstractParser</a> class, which is a recursive descent parser that
+                        The parser is implemented in the <a class="text-indigo-500 hover:text-indigo-600 hover:underline" href="https://github.com/louis845/WebASTParser/blob/main/src/parsing/AbstractParser.ts" class="text-indigo-500 hover:text-indigo-600 hover:underline">AbstractParser</a> class, which is a recursive descent parser that
                         defines common structures (non-terminal symbols) such as Class, FunctionDeclaration, and the rough rules of the
                         "abstract" language agnostic grammar. The language specific parser implementations are implemented in the
-                        <a href="" class="text-indigo-500 hover:text-indigo-600 hover:underline">PythonParser</a> and
-                        <a href="" class="text-indigo-500 hover:text-indigo-600 hover:underline">TypeScriptParser</a> classes, which adheres to the rules given by
+                        <a href="https://github.com/louis845/WebASTParser/blob/main/src/impl/python/PythonParser.ts" class="text-indigo-500 hover:text-indigo-600 hover:underline">PythonParser</a> and
+                        <a href="https://github.com/louis845/WebASTParser/blob/main/src/impl/typescript/TypeScriptParser.ts" class="text-indigo-500 hover:text-indigo-600 hover:underline">TypeScriptParser</a> classes, which adheres to the rules given by
                         AbstractParser, and contains language-specific transformations from the tokens to the AST.
                     </p>
 
                     <h3 class="text-1xl font-bold text-gray-800">ASTTokenizer</h3>
                     <p>
-                        This is an reverse operation that converts the AST back to a stream of tokens, given by an abstract class <a href="" class="text-indigo-500 hover:text-indigo-600 hover:underline">ASTGenericTokenizer</a>.
-                        The <a href="" class="text-indigo-500 hover:text-indigo-600 hover:underline">ASTFaithfulTokenizer</a> is a language-agnostic conversion class that converts the AST to its original code form, highlighting
-                        the tree structure that is constructed from the original code. The <a href="" class="text-indigo-500 hover:text-indigo-600 hover:underline">PythonSimplificationTokenizer</a> and <a href="" class="text-indigo-500 hover:text-indigo-600 hover:underline">TypeScriptSimplificationTokenizer</a>
+                        This is an reverse operation that converts the AST back to a stream of tokens, given by an abstract class <a href="https://github.com/louis845/WebASTParser/blob/main/src/parsing/ASTGenericTokenizer.ts" class="text-indigo-500 hover:text-indigo-600 hover:underline">ASTGenericTokenizer</a>.
+                        The <a href="https://github.com/louis845/WebASTParser/blob/main/src/parsing/ASTFaithfulTokenizer.ts" class="text-indigo-500 hover:text-indigo-600 hover:underline">ASTFaithfulTokenizer</a> is a language-agnostic conversion class that converts the AST to its original code form, highlighting
+                        the tree structure that is constructed from the original code. The <a href="https://github.com/louis845/WebASTParser/blob/main/src/impl/python/PythonSimplificationTokenizer.ts" class="text-indigo-500 hover:text-indigo-600 hover:underline">PythonSimplificationTokenizer</a> and <a href="https://github.com/louis845/WebASTParser/blob/main/src/impl/typescript/TypeScriptSimplificationTokenizer.ts" class="text-indigo-500 hover:text-indigo-600 hover:underline">TypeScriptSimplificationTokenizer</a>
                         are conversion classes that is able to ignore function bodies, while keeping the rest of the information in the AST (such as comments) intact, thereby
                         compressing the context required for the LLM code completion models.
                     </p>
                     
                     <h2 class="text-2xl font-bold text-gray-800">Source repo</h2>
                     <p>
-                        The repo for the relevant code is in <a href="" class="text-indigo-500 hover:text-indigo-600 hover:underline">GitHub</a>.
+                        The repo for the relevant code is in <a href="https://github.com/louis845/WebASTParser" class="text-indigo-500 hover:text-indigo-600 hover:underline">GitHub</a>.
                     </p>
 
                     <h2 class="text-2xl font-bold text-gray-800">Interactive demonstration</h2>
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 p-5">
-                        <a href="#" class="bg-white shadow-lg p-4 rounded-lg hover:bg-gray-50 transition-colors flex flex-col">
+                    <div class="grid grid-cols-2 grid-flow-row gap-4 gap-y-2"></div>
+                        <a href="https://louis845.github.io/WebASTParser/PythonParser" class="bg-white shadow-lg p-4 rounded-lg hover:bg-gray-50 transition-colors flex flex-col">
                             <h2 class="text-lg font-bold">Python Parser</h2>
                             <p class="flex-1">Try the Python parser!</p>
                         </a>
-                        <a href="#" class="bg-white shadow-lg p-4 rounded-lg hover:bg-gray-50 transition-colors flex flex-col">
+                        <a href="https://louis845.github.io/WebASTParser/PythonTokenizer" class="bg-white shadow-lg p-4 rounded-lg hover:bg-gray-50 transition-colors flex flex-col">
                             <h2 class="text-lg font-bold">Python Tokenizer</h2>
                             <p class="flex-1">Try the Python Tokenizer!</p>
                         </a>
-                        <a href="#" class="bg-white shadow-lg p-4 rounded-lg hover:bg-gray-50 transition-colors flex flex-col">
+                        <a href="https://louis845.github.io/WebASTParser/TypeScriptParser" class="bg-white shadow-lg p-4 rounded-lg hover:bg-gray-50 transition-colors flex flex-col">
                             <h2 class="text-lg font-bold">Typescript Parser</h2>
                             <p class="flex-1">Try the Typescript parser!</p>
                         </a>
-                        <a href="#" class="bg-white shadow-lg p-4 rounded-lg hover:bg-gray-50 transition-colors flex flex-col">
+                        <a href="https://louis845.github.io/WebASTParser/TypeScriptTokenizer" class="bg-white shadow-lg p-4 rounded-lg hover:bg-gray-50 transition-colors flex flex-col">
                             <h2 class="text-lg font-bold">Typescript Tokenizer</h2>
                             <p class="flex-1">Try the Typescript tokenizer!</p>
                         </a>
