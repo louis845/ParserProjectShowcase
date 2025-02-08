@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Server API</title>
+    <link href="../output.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/styles/default.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/highlight.min.js"></script>
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+        }
+
+        #page-container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        #content-wrap {
+            flex: 1;
+            overflow-y: auto;
+            padding-bottom: 4rem;
+        }
+
+        .custom-shadow {
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+
+    <script>
+        function openPopup(id) {
+            const popup = document.getElementById(id);
+            popup.classList.remove("hidden");
+            document.body.classList.add("overflow-hidden");
+        }
+
+        function closePopup(id) {
+            const popup = document.getElementById(id);
+            popup.classList.add("hidden");
+            document.body.classList.remove("overflow-hidden");
+        }
+    </script>
+</head>
+<body class="bg-gray-100">
+    <div id="about" class="hidden fixed top-0 left-0 right-0 bottom-0 bg-gray-900/50 flex items-center justify-center z-20 transition-opacity duration-300 ease-in-out">
+        <div class="bg-white p-6 rounded-lg max-w-md custom-shadow">
+            <h2 class="text-2xl font-bold text-gray-800">About</h2>
+            <p class="mt-4 text-gray-600 text-justify">
+              This website showcases an (incomplete) implementation of a code completion system based on the Qwen2.5-Coder family of models. It contains a VSCode extension that sends code snippets to a server, which then returns a single line
+              completion suggestion. The server is implemented in Python using a custom API server for logins, and a custom message queue for handling requests from multiple clients into a single thread for running the model on GPU. The client
+              is implemented in TypeScript using the VSCode extension development API, and additionally contains some custom GUIs for displaying differences between two code snippets for comparison.
+            </p>
+            <button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600" onclick="closePopup('about')">Close</button>
+        </div>
+    </div>
+
+    <div id="page-container" class="flex flex-col min-h-screen">
+        <header class="bg-white shadow fixed top-0 left-0 right-0 z-10">
+            <div class="container mx-auto px-6 py-4">
+                <div class="flex justify-between items-center">
+                    <a class="text-xl font-bold text-gray-800">Client-Server API</a>
+                    <div class="flex space-x-4">
+                        <a href="./client-server.html" class="px-3 py-2 text-gray-800 text-sm hover:text-indigo-500 cursor-pointer">Back</a>
+                        <a class="px-3 py-2 text-gray-800 text-sm hover:text-indigo-500 cursor-pointer" onclick="openPopup('about')">About</a>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <div id="content-wrap" class="mt-16 mb-16">
+            <section class="container mx-auto px-6 py-10">
+                <span class="text-3xl font-bold text-gray-800">ServerAPI Documentation</span>
+                <a href="https://github.com/louis845/ClientServerAPI/tree/main/ServerAPI" class="px-4 py-2 text-gray-800 text-sm hover:text-indigo-500 cursor-pointer flex flex-col items-center inline-flex">
+                    <svg class="inline-block" height="32" aria-hidden="true" viewBox="0 0 24 24" version="1.1" width="32" data-view-component="true">
+                        <path d="M12.5.75C6.146.75 1 5.896 1 12.25c0 5.089 3.292 9.387 7.863 10.91.575.101.79-.244.79-.546 0-.273-.014-1.178-.014-2.142-2.889.532-3.636-.704-3.866-1.35-.13-.331-.69-1.352-1.18-1.625-.402-.216-.977-.748-.014-.762.906-.014 1.553.834 1.769 1.179 1.035 1.74 2.688 1.25 3.349.948.1-.747.402-1.25.733-1.538-2.559-.287-5.232-1.279-5.232-5.678 0-1.25.445-2.285 1.178-3.09-.115-.288-.517-1.467.115-3.048 0 0 .963-.302 3.163 1.179.92-.259 1.897-.388 2.875-.388.977 0 1.955.13 2.875.388 2.2-1.495 3.162-1.179 3.162-1.179.633 1.581.23 2.76.115 3.048.733.805 1.179 1.825 1.179 3.09 0 4.413-2.688 5.39-5.247 5.678.417.36.776 1.05.776 2.128 0 1.538-.014 2.774-.014 3.162 0 .302.216.662.79.547C20.709 21.637 24 17.324 24 12.25 24 5.896 18.854.75 12.5.75Z"></path>
+                    </svg>
+                    GitHub Code
+                </a>
+
+                <article class="prose text-gray-700 w-full max-w-none">
+                    <div id="markdown-output"></div>
+                </article>
+            </section>
+        </div>
+
+        <footer class="bg-white shadow fixed bottom-0 left-0 right-0 z-10">
+            <div class="container mx-auto px-6 py-4">
+                <p class="text-center text-gray-800">© 2025 CHAU Yu Hei</p>
+            </div>
+        </footer>
+    </div>
+
+    <script type="text/plain" id="markdown">
+ServerAPI is a minimalistic Python package designed to help you create an API server with a simple login mechanism and customizable behavior after successful authentication. It facilitates secure JSON-based communication, allowing downstream projects to define tailored responses based on their specific requirements.
+
+## Features
+
+- **Simple Login Mechanism:** Authenticate users using username and password credentials.
+- **JSON-Based Communication:** Handle JSON requests and responses seamlessly.
+- **Customizable Behavior:** Implement custom server responses via callback functions.
+- **Threaded Server:** Manage multiple client connections concurrently using threading.
+- **Session Management:** Securely manage user sessions with UUID-based tokens.
+- **Optional TLS Support:** Enable secure communications using SSL/TLS.
+- **Modular Design:** Clean and maintainable code structure for easy integration.
+
+## Installation
+
+You can install ServerAPI using `pip`:
+
+```bash
+pip install git+ssh://git@ip.address/path/to/ServerAPI
+```
+
+## Usage
+
+### Importing the ServerAPI
+
+In your Python project, import the `ThreadedAPIServer` from the `ServerAPI` package:
+
+```python
+from ServerAPI import ThreadedAPIServer
+```
+
+### Setting Up the Server
+
+Define your user credentials and implement the request callback function, then initialize and start the server.
+
+#### Example
+
+```python
+import logging
+from ServerAPI import ThreadedAPIServer
+
+# Define user credentials
+credentials = {
+    "alice": "password123",
+    "bob": "securepassword",
+}
+
+# Define the request callback function
+def my_request_callback(username, session_token, data):
+    """
+    Handle authenticated requests.
+
+    Args:
+        username (str): The username of the authenticated user.
+        session_token (str): The session token.
+        data (dict): The JSON data sent by the client.
+
+    Returns:
+        tuple:
+            force_close (bool): Whether to forcefully close the connection.
+            force_logout (bool): Whether to force logout the user.
+            response_json (dict): The JSON data to send back as the response.
+    """
+    # Implement your custom logic here
+    if data.get("action") == "echo":
+        response = {"echo": data.get("message", "")}
+    else:
+        response = {"error": "Unknown action."}
+    
+    # Do not force close or logout
+    return (False, False, response)
+
+# Set up logging
+logger = logging.getLogger("MyAPIServer")
+logger.setLevel(logging.INFO)
+handler = logging.StreamHandler()
+formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+handler.setFormatter(formatter)
+logger.addHandler(handler)
+
+# Initialize the server
+server = ThreadedAPIServer(
+    host="127.0.0.1",
+    port=8000,
+    credentials=credentials,
+    request_callback=my_request_callback,
+    login_cookie_level="Strict",  # Options: "None", "Lax", "Strict"
+    logger=logger,
+    timeout=5.0,
+    max_recv_calls_per_request=1024
+)
+
+# Optional: Enable TLS
+# server.setConnectionSecurityParams(certfile="path/to/cert.pem", keyfile="path/to/key.pem")
+
+# Start the API server
+try:
+    server.startAPIServer()
+except KeyboardInterrupt:
+    server.stopAPIServer()
+    logger.info("Server stopped.")
+```
+
+### API Endpoints
+
+ServerAPI provides the following endpoints:
+
+#### `/login` (POST)
+
+Authenticate a user using username and password.
+
+- **Request Body:**
+
+    ```json
+    {
+        "username": "alice",
+        "password": "password123"
+    }
+    ```
+
+- **Response:**
+
+    - **Success (200 OK):**
+
+    ```json
+    {
+        "message": "Login successful."
+    }
+    ```
+
+    Sets a `sessionToken` cookie in the response headers.
+
+    - **Failure (400 Bad Request / 401 Unauthorized):**
+
+    ```json
+    {
+        "error": "Invalid credentials."
+    }
+    ```
+
+#### `/logout` (POST)
+
+Logout the authenticated user.
+
+- **Headers:**
+    
+    - `Cookie: sessionToken=<token>`
+
+- **Response:**
+
+    - **Success (200 OK):**
+
+    ```json
+    {
+        "message": "Logout successful."
+    }
+    ```
+
+    - **Failure (400 Bad Request / 401 Unauthorized):**
+
+    ```json
+    {
+        "error": "Invalid session token."
+    }
+    ```
+
+#### `/communicate` (POST)
+
+Handle authenticated communication with custom behavior.
+
+- **Headers:**
+
+    - `Cookie: sessionToken=<token>`
+
+- **Request Body:**
+
+    Send a JSON payload as required by your application.
+
+- **Response:**
+
+    The response depends on the implementation of your `request_callback` function.
+
+### Callbacks
+Currently, only a multithreaded (in the same Python process) version can be used. As such, the `request_callback` is expected to be thread safe, since they may be run in difference threads.
+In the future, there may be a `ProcessAPIServer` to execute the management of connections in subprocesses, and in such a case, `request_callback` should be process safe. However, `session_validity_callback`
+will always be run in the main thread inside the main process.
+
+### Customizing Behavior
+
+Implement the `request_callback` function to define how the server should respond to authenticated requests. The callback receives the username, session token, and the JSON data sent by the client, and must return a tuple containing:
+
+1. **force_close (bool):** Whether to forcefully close the connection after responding.
+2. **force_logout (bool):** Whether to invalidate the user's session.
+3. **response_json (dict):** The JSON data to send back as the response.
+
+#### Example Callback
+
+```python
+def my_request_callback(username, session_token, data):
+    # Example logic: Echo the received message
+    message = data.get("message", "")
+    response = {"echo": message}
+    # Do not close or logout
+    return (False, False, response)
+```
+
+### Enabling TLS
+
+To secure communications using TLS, provide the server certificate and key files:
+
+```python
+server.setConnectionSecurityParams(certfile="path/to/cert.pem", keyfile="path/to/key.pem")
+```
+
+Optionally, specify a CA file for client certificate verification:
+
+```python
+server.setConnectionSecurityParams(certfile="path/to/cert.pem", keyfile="path/to/key.pem", cafile="path/to/ca.pem")
+```
+
+Ensure that `certfile`, `keyfile`, and `cafile` paths are correct and accessible.
+
+## Configuration
+
+### Credentials
+
+Provide a dictionary mapping usernames to passwords when initializing the server:
+
+```python
+credentials = {
+    "user1": "password1",
+    "user2": "password2",
+}
+```
+
+### Login Cookie Level
+
+Set the security level for the session cookie:
+
+- **"None":** No SameSite attribute.
+- **"Lax":** SameSite=Lax.
+- **"Strict":** SameSite=Strict.
+
+Example:
+
+```python
+login_cookie_level="Strict"
+```
+
+### Logging
+
+Provide a `logging.Logger` instance to capture server logs:
+
+```python
+import logging
+
+logger = logging.getLogger("MyAPIServer")
+logger.setLevel(logging.INFO)
+handler = logging.StreamHandler()
+formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+handler.setFormatter(formatter)
+logger.addHandler(handler)
+```
+
+Pass the logger to the server:
+
+```python
+server = ThreadedAPIServer(..., logger=logger)
+```
+
+## API Reference
+
+### `ThreadedAPIServer`
+
+A threaded API server implementation.
+
+#### `__init__`
+
+```python
+ThreadedAPIServer(
+    host: str,
+    port: int,
+    credentials: dict[str, str],
+    request_callback: Callable[[str, str, dict[str, Any]], tuple[bool, dict[str, Any]]],
+    session_validity_callback: Optional[Callable[[LoginSession], bool]],
+    login_cookie_level: str = "Strict",
+    logger: Optional[logging.Logger] = None,
+    timeout: float = 5.0,
+    max_recv_calls_per_request: int = 1024
+)
+```
+
+- **host:** The host address to bind the server (e.g., "127.0.0.1").
+- **port:** The port number to listen on (e.g., 8000).
+- **credentials:** A dictionary mapping usernames to passwords.
+- **request_callback:** A function to handle authenticated requests. It receives `username`, `session_token`, and `data` as arguments and returns a tuple `(force_close, response_json)`. This function has to be thread and process safe.
+- **session_validity_callback:** A function to invalidate LoginSession(s). This is called in the main server thread/process, so this function does not have to be assumed to thread/process safe.
+- **login_cookie_level:** The security level for the session cookie. Options are `"None"`, `"Lax"`, or `"Strict"`.
+- **logger:** An optional `logging.Logger` instance for logging server events.
+- **timeout:** Socket timeout in seconds (default is 5.0).
+- **max_recv_calls_per_request:** Maximum number of `recv` operations per request (default is 1024, corresponding to 4MB).
+
+#### `setConnectionSecurityParams`
+
+```python
+setConnectionSecurityParams(
+    certfile: Optional[str] = None,
+    keyfile: Optional[str] = None,
+    cafile: Optional[str] = None
+) -> None
+```
+
+Set up TLS parameters.
+
+- **certfile:** Path to the server's SSL certificate file.
+- **keyfile:** Path to the server's SSL key file.
+- **cafile:** (Optional) Path to the CA certificate file for client certificate verification.
+
+#### `startAPIServer`
+
+```python
+startAPIServer() -> None
+```
+
+Start the API server to accept incoming connections.
+
+#### `stopAPIServer`
+
+```python
+stopAPIServer() -> None
+```
+
+Stop the API server gracefully.
+
+#### `isUsingTLS`
+
+```python
+isUsingTLS() -> bool
+```
+
+Check if the server is using TLS for secure communications.
+
+## Security
+
+To enable TLS, provide the necessary certificate and key files using `setConnectionSecurityParams`. Ensure that your certificates are securely managed and stored to maintain secure communications.
+
+## IMPORTANT: Login status
+
+The only thing that ServerAPI uses to check the status of the logins is whether the session token exists in the dictionary or not. Implement the callbacks correctly so they work as intended, and make appropriate use
+of communication between callback functions that may be in different threads `ThreadedAPIServer` or in different processes `ProcessAPIServer` (not implemented yet).
+    </script>
+    <script>
+        var markdownText = document.getElementById("markdown").textContent;
+        var htmlContent = marked.parse(markdownText);
+        document.getElementById('markdown-output').innerHTML = htmlContent;
+        hljs.highlightAll();
+    </script>
+</body>
+</html>

@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Client-Server API</title>
+    <link href="../output.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/styles/default.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/highlight.min.js"></script>
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+        }
+
+        #page-container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        #content-wrap {
+            flex: 1;
+            overflow-y: auto;
+            padding-bottom: 4rem;
+        }
+
+        .custom-shadow {
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+
+    <script>
+        function openPopup(id) {
+            const popup = document.getElementById(id);
+            popup.classList.remove("hidden");
+            document.body.classList.add("overflow-hidden");
+        }
+
+        function closePopup(id) {
+            const popup = document.getElementById(id);
+            popup.classList.add("hidden");
+            document.body.classList.remove("overflow-hidden");
+        }
+    </script>
+</head>
+<body class="bg-gray-100">
+    <div id="about" class="hidden fixed top-0 left-0 right-0 bottom-0 bg-gray-900/50 flex items-center justify-center z-20 transition-opacity duration-300 ease-in-out">
+        <div class="bg-white p-6 rounded-lg max-w-md custom-shadow">
+            <h2 class="text-2xl font-bold text-gray-800">About</h2>
+            <p class="mt-4 text-gray-600 text-justify">
+              This website showcases an (incomplete) implementation of a code completion system based on the Qwen2.5-Coder family of models. It contains a VSCode extension that sends code snippets to a server, which then returns a single line
+              completion suggestion. The server is implemented in Python using a custom API server for logins, and a custom message queue for handling requests from multiple clients into a single thread for running the model on GPU. The client
+              is implemented in TypeScript using the VSCode extension development API, and additionally contains some custom GUIs for displaying differences between two code snippets for comparison.
+            </p>
+            <button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600" onclick="closePopup('about')">Close</button>
+        </div>
+    </div>
+
+    <div id="page-container" class="flex flex-col min-h-screen">
+        <header class="bg-white shadow fixed top-0 left-0 right-0 z-10">
+            <div class="container mx-auto px-6 py-4">
+                <div class="flex justify-between items-center">
+                    <a class="text-xl font-bold text-gray-800">Custom VSCode Copilot Extension</a>
+                    <div class="flex space-x-4">
+                        <a href="../index.html" class="px-3 py-2 text-gray-800 text-sm hover:text-indigo-500 cursor-pointer">Back</a>
+                        <a class="px-3 py-2 text-gray-800 text-sm hover:text-indigo-500 cursor-pointer" onclick="openPopup('about')">About</a>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <div id="content-wrap" class="mt-16 mb-16">
+            <section class="container mx-auto px-6 py-10">
+                <div class="flex flex-col space-y-6 items-center">
+                    <header class="mb-4">
+                        <h1 class="text-3xl font-bold text-gray-800">Client-Server API library</h1>
+                        <p class="text-gray-600 mt-2">A minimalistic communication library in Python (Server/Client) and TypeScript (Client) that uses
+                            HTTP(s)/1.1 for communication between two separate processes. The library is designed to support a login mechanism
+                            and custom communication requests between the client and server. The server is implemented in Python using multithreading,
+                            and the client is implemented in TypeScript/Python. 
+                        </p>
+                        <br>
+                        <h2 class="text-2xl font-bold text-gray-800">High level overview</h2>
+                        <p class="text-gray-600 mt-2">
+                            There are three phases in the communication process: login, communication, and logout. The client sends a login request to the server, where
+                            a session token is generated and returned to the client if the login is successful. The client and server can then process custom communication requests
+                            using JSON and the session token. Finally, the client can logout from the server, invalidating the session token.
+                        </p>
+                        <div class="flex flex-col justify-center h-auto w-full">
+                            <img class="max-h-30vh max-w-full w-auto object-contain" src="./overview.png"/>
+                            <p class="mt-2 text-center">
+                                Illustration of the client-server communication process.
+                            </p>
+                        </div>
+                        <p class="text-gray-600 mt-2">
+                            For securing the credentials during transit, the server/client can use TLS for secure communication. Additionally, the server can use mTLS to only allow
+                            verified clients to communicate with the server, where OpenSSL certificates, keys can be used to prove the identity of one side, and a CA certificate can
+                            be used to verify the identity of the other side.
+                        </p>
+                        <h2 class="text-2xl font-bold text-gray-800">Modularity</h2>
+                        <p class="text-gray-600 mt-2 text-justify">
+                            To enable easy reuse of the client-server architecture in other projects, the library is designed to be modular, so minimal-effort is necessary to create
+                            a new client-server pair. To implement the server, it is only necessary to implement the callback function that processes the JSON communication, and pass
+                            the credentials and OpenSSL parameters to the server. To make use of the client, it is only necessary to initialize the client with the server host/port and
+                            OpenSSL parameters, and call the login, communicate, and logout methods.
+                        </p>
+                        <h2 class="text-2xl font-bold text-gray-800">Server features</h2>
+                        <p class="text-gray-600 mt-2">For more details, please read the <a class="mt-auto text-indigo-500 hover:text-indigo-600 hover:underline" href="./server.html">README for server</a>.</p>
+                        <ul class="list-disc list-inside text-gray-600 mt-2">
+                            <li>In-memory small list of login credentials</li>
+                            <li>Handling of logins and logouts and session tokens</li>
+                            <li>Built-in multi-threading support</li>
+                            <li>Translation of messages to JSON in callback function</li>
+                        </ul>
+                        <h2 class="text-2xl font-bold text-gray-800">Client features</h2>
+                        <p class="text-gray-600 mt-2">For more details, please read the <a class="mt-auto text-indigo-500 hover:text-indigo-600 hover:underline" href="./client-python.html">README for Python</a> or <a class="mt-auto text-indigo-500 hover:text-indigo-600 hover:underline" href="./client-ts.html">README for TypeScript</a>.</p>
+                        <ul class="list-disc list-inside text-gray-600 mt-2">
+                            <li>Simple login/logout methods</li>
+                            <li>Custom communication requests by passing JSON</li>
+                            <li>Support for Python / TypeScript</li>
+                        </ul>
+                    </header>
+                </div>
+            </section>
+        </div>
+
+        <footer class="bg-white shadow fixed bottom-0 left-0 right-0 z-10">
+            <div class="container mx-auto px-6 py-4">
+                <p class="text-center text-gray-800">© 2025 CHAU Yu Hei</p>
+            </div>
+        </footer>
+    </div>
+</body>
+</html>
