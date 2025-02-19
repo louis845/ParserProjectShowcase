@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LLM Helper Utilities</title>
+    <link href="../output.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/styles/default.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/highlight.min.js"></script>
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+        }
+
+        #page-container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        #content-wrap {
+            flex: 1;
+            overflow-y: auto;
+            padding-bottom: 4rem;
+        }
+
+        .custom-shadow {
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+
+    <script>
+        function openPopup(id) {
+            const popup = document.getElementById(id);
+            popup.classList.remove("hidden");
+            document.body.classList.add("overflow-hidden");
+        }
+
+        function closePopup(id) {
+            const popup = document.getElementById(id);
+            popup.classList.add("hidden");
+            document.body.classList.remove("overflow-hidden");
+        }
+    </script>
+</head>
+<body class="bg-gray-100">
+    <div id="about" class="hidden fixed top-0 left-0 right-0 bottom-0 bg-gray-900/50 flex items-center justify-center z-20 transition-opacity duration-300 ease-in-out">
+        <div class="bg-white p-6 rounded-lg max-w-md custom-shadow">
+            <h2 class="text-2xl font-bold text-gray-800">About</h2>
+            <p class="mt-4 text-gray-600 text-justify">
+              This website showcases an (ongoing) implementation of a code completion system based on the Qwen2.5-Coder family of models. It contains a VSCode extension that sends code snippets to a server, which then returns a single line
+              completion suggestion. The server is implemented in Python using a custom API server for logins, and a custom message queue for handling requests from multiple clients into a single thread for running the model on GPU. The client
+              is implemented in TypeScript using the VSCode extension development API, and additionally contains some custom GUIs for displaying differences between two code snippets for comparison.
+            </p>
+            <button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600" onclick="closePopup('about')">Close</button>
+        </div>
+    </div>
+
+    <div id="page-container" class="flex flex-col min-h-screen">
+        <header class="bg-white shadow fixed top-0 left-0 right-0 z-10">
+            <div class="container mx-auto px-6 py-4">
+                <div class="flex justify-between items-center">
+                    <a class="text-xl font-bold text-gray-800">Custom VSCode Copilot Extension</a>
+                    <div class="flex space-x-4">
+                        <a href="../index.html" class="px-3 py-2 text-gray-800 text-sm hover:text-indigo-500 cursor-pointer">Back</a>
+                        <a class="px-3 py-2 text-gray-800 text-sm hover:text-indigo-500 cursor-pointer" onclick="openPopup('about')">About</a>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <div id="content-wrap" class="mt-16 mb-16">
+            <section class="container mx-auto px-6 py-10">
+                <div class="flex flex-col space-y-6 items-center">
+                    <header class="mb-4">
+                        <h1 class="text-3xl font-bold text-gray-800">LLM Helper Utilities</h1>
+                        <p class="text-gray-600 mt-2">
+                            A utility library and standalone programs written in Python to assist in the benchmarking, inference and conversion of LLM models.
+                            As a library, the LLMHelper contains abstractions for loading models and doing inference with different local LLM backends, such as
+                            PyTorch+HuggingFace transformers and TensorRT-LLM, and also contains convenience utilities that converts HuggingFace's safetensors to
+                            TensorRT-LLM engines of different rank.
+                        </p>
+                        
+                        <h2 class="text-2xl font-bold text-gray-800 mt-4">Features</h2>
+                        <br/>
+                        <div class="flex flex-wrap -mx-3">
+                            <div class="w-full sm:w-1/2 lg:w-1/3 px-3 mb-6">
+                                <div class="bg-white shadow-lg rounded-lg overflow-hidden flex flex-col h-full">
+                                    <div class="p-4 flex flex-col flex-grow">
+                                        <h3 class="text-xl font-bold text-gray-800">Conversion from safetensors to TRT-LLM</h3>
+                                        <p class="mt-2 text-gray-600 text-justify">
+                                            NVIDIA's <a class="mt-auto text-yellow-500 hover:text-yellow-600 hover:underline" href="https://docs.nvidia.com/tensorrt-llm/index.html">TensorRT-LLM</a> is a high-performance engine for running large language models,
+                                            and the LLM Helper contains utilities to convert HuggingFace's safetensors to TensorRT-LLM engines of different rank.
+                                        </p>
+                                        <a href="./conversion.html" class="mt-auto text-indigo-500 hover:text-indigo-600 hover:underline">Read more</a>
+                                    </div>
+                                </div>
+                            </div>
+        
+                            <div class="w-full sm:w-1/2 lg:w-1/3 px-3 mb-6">
+                                <div class="bg-white shadow-lg rounded-lg overflow-hidden flex flex-col h-full">
+                                    <div class="p-4 flex flex-col flex-grow">
+                                        <h3 class="text-xl font-bold text-gray-800">Abstraction of token generation</h3>
+                                        <p class="mt-2 text-gray-600 text-justify">
+                                            An abstraction layer is created so that the same code can be used to generate tokens for different LLM backends,
+                                            so that it is enough to change the object that is passed to the code that uses the LLM to switch between different
+                                            LLM backends. This avoids having to rewrite the code for different LLM backends.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+        
+                            <div class="w-full sm:w-1/2 lg:w-1/3 px-3 mb-6">
+                              <div class="bg-white shadow-lg rounded-lg overflow-hidden flex flex-col h-full">
+                                  <div class="p-4 flex flex-col flex-grow">
+                                      <h3 class="text-xl font-bold text-gray-800">Model templates</h3>
+                                      <p class="mt-2 text-gray-600 text-justify">
+                                          In old versions of HF transformers, the model templates may not be present. Although this might not be necessary
+                                          for newer versions of HF transformers, the LLM Helper contains model templates allowing for a streamlined way of
+                                          creating context tokens for instruction tuned LLM models or infilling LLM models.
+                                      </p>
+                                      <a href="./templates.html" class="mt-auto text-indigo-500 hover:text-indigo-600 hover:underline">Read more</a>
+                                  </div>
+                              </div>
+                            </div>
+        
+                            <div class="w-full sm:w-1/2 lg:w-1/3 px-3 mb-6">
+                                <div class="bg-white shadow-lg rounded-lg overflow-hidden flex flex-col h-full">
+                                    <div class="p-4 flex flex-col flex-grow">
+                                        <h3 class="text-xl font-bold text-gray-800">LLM inference efficiency benchmark</h3>
+                                        <p class="mt-2 text-gray-600 text-justify">
+                                            A general benchmarking tool that benchmarks the efficiency of different LLM backends, along with including
+                                            options to weigh whether doing batched inference, multiple GPU (tensor-parallel/pipeline-parallel) inference,
+                                            quantization and so on will be beneficial for the LLM model.
+                                        </p>
+                                        <a href="./efficiency.html" class="mt-auto text-indigo-500 hover:text-indigo-600 hover:underline">Read more</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </header>
+                </div>
+            </section>
+        </div>
+
+        <footer class="bg-white shadow fixed bottom-0 left-0 right-0 z-10">
+            <div class="container mx-auto px-6 py-4">
+                <p class="text-center text-gray-800">© 2025 CHAU Yu Hei</p>
+            </div>
+        </footer>
+    </div>
+</body>
+</html>

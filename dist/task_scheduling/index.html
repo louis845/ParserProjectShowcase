@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Task Scheduling API</title>
+    <link href="../output.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/styles/default.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/highlight.min.js"></script>
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+        }
+
+        #page-container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        #content-wrap {
+            flex: 1;
+            overflow-y: auto;
+            padding-bottom: 4rem;
+        }
+
+        .custom-shadow {
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+
+    <script>
+        function openPopup(id) {
+            const popup = document.getElementById(id);
+            popup.classList.remove("hidden");
+            document.body.classList.add("overflow-hidden");
+        }
+
+        function closePopup(id) {
+            const popup = document.getElementById(id);
+            popup.classList.add("hidden");
+            document.body.classList.remove("overflow-hidden");
+        }
+    </script>
+</head>
+<body class="bg-gray-100">
+    <div id="about" class="hidden fixed top-0 left-0 right-0 bottom-0 bg-gray-900/50 flex items-center justify-center z-20 transition-opacity duration-300 ease-in-out">
+        <div class="bg-white p-6 rounded-lg max-w-md custom-shadow">
+            <h2 class="text-2xl font-bold text-gray-800">About</h2>
+            <p class="mt-4 text-gray-600 text-justify">
+              This website showcases an (ongoing) implementation of a code completion system based on the Qwen2.5-Coder family of models. It contains a VSCode extension that sends code snippets to a server, which then returns a single line
+              completion suggestion. The server is implemented in Python using a custom API server for logins, and a custom message queue for handling requests from multiple clients into a single thread for running the model on GPU. The client
+              is implemented in TypeScript using the VSCode extension development API, and additionally contains some custom GUIs for displaying differences between two code snippets for comparison.
+            </p>
+            <button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600" onclick="closePopup('about')">Close</button>
+        </div>
+    </div>
+
+    <div id="page-container" class="flex flex-col min-h-screen">
+        <header class="bg-white shadow fixed top-0 left-0 right-0 z-10">
+            <div class="container mx-auto px-6 py-4">
+                <div class="flex justify-between items-center">
+                    <a class="text-xl font-bold text-gray-800">Custom VSCode Copilot Extension</a>
+                    <div class="flex space-x-4">
+                        <a href="../index.html" class="px-3 py-2 text-gray-800 text-sm hover:text-indigo-500 cursor-pointer">Back</a>
+                        <a class="px-3 py-2 text-gray-800 text-sm hover:text-indigo-500 cursor-pointer" onclick="openPopup('about')">About</a>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <div id="content-wrap" class="mt-16 mb-16">
+            <section class="container mx-auto px-6 py-10">
+                <div class="flex flex-col space-y-6 items-center">
+                    <header class="mb-4">
+                        <span class="text-3xl font-bold text-gray-800">Task Scheduling API</span>
+                        <a href="https://github.com/louis845/ThreadExecutorAPI" class="px-4 py-2 text-gray-800 text-sm hover:text-indigo-500 cursor-pointer flex flex-col items-center inline-flex">
+                            <svg class="inline-block" height="32" aria-hidden="true" viewBox="0 0 24 24" version="1.1" width="32" data-view-component="true">
+                                <path d="M12.5.75C6.146.75 1 5.896 1 12.25c0 5.089 3.292 9.387 7.863 10.91.575.101.79-.244.79-.546 0-.273-.014-1.178-.014-2.142-2.889.532-3.636-.704-3.866-1.35-.13-.331-.69-1.352-1.18-1.625-.402-.216-.977-.748-.014-.762.906-.014 1.553.834 1.769 1.179 1.035 1.74 2.688 1.25 3.349.948.1-.747.402-1.25.733-1.538-2.559-.287-5.232-1.279-5.232-5.678 0-1.25.445-2.285 1.178-3.09-.115-.288-.517-1.467.115-3.048 0 0 .963-.302 3.163 1.179.92-.259 1.897-.388 2.875-.388.977 0 1.955.13 2.875.388 2.2-1.495 3.162-1.179 3.162-1.179.633 1.581.23 2.76.115 3.048.733.805 1.179 1.825 1.179 3.09 0 4.413-2.688 5.39-5.247 5.678.417.36.776 1.05.776 2.128 0 1.538-.014 2.774-.014 3.162 0 .302.216.662.79.547C20.709 21.637 24 17.324 24 12.25 24 5.896 18.854.75 12.5.75Z"></path>
+                            </svg>
+                            GitHub Code
+                        </a>
+                        <p class="text-gray-600 mt-2 text-justify">A minimalistic communication library in Python that allows scheduling tasks to be run in a single Python thread. This achieves
+                            similar features such as Celery+RabbitMQ, except that the worker thread is run from the same Python process, allowing memory to be shared between them for
+                            faster access.
+                        </p>
+                        <br>
+                        <h2 class="text-2xl font-bold text-gray-800">Context</h2>
+                        <p class="text-gray-600 mt-2 text-justify">
+                            For ML inference applications, it is usually the case that inference is bottlenecked by the number of GPUs available. In my case, there is a single GPU for running
+                            the copilot server, and therefore code completion requests are restricted to be run one after the other (with 100% GPU usage). As the <a class="mt-auto text-indigo-500 hover:text-indigo-600 hover:underline" href="../client_server/index.html">code completion server</a>
+                            accepts multiple incoming connections simultaneously in multiple threads, it is necessasry to have a queue of tasks so the GPU resources are used only in a dedicated
+                            worker thread. Since ML inferences are run in GPUs, it doesn't interfere with Python's GIL, and parallelism is still achieved.
+                        </p>
+
+                        <h2 class="text-2xl font-bold text-gray-800">High level overview</h2>
+
+                        <p class="text-gray-600 mt-2 text-justify">
+                            This library has an AbstractExecutor class, which serves as the base class for executing tasks. It contains abstract methods to initialize resources (e.g GPU models), run tasks in a single loop,
+                            and clean up resources. The AbstractExecutor class handles the queuing mechanism along with locks to ensure the queuing, polling and cancellation of tasks is thread-safe. When a request is queued,
+                            the executor will generate a unique task ID (hex string from sha256sum with seed), and the same task ID will be used to poll the status of the task, indicating whether the task is ongoing, completed,
+                            failed or so on.
+                        </p>
+
+                        <div class="flex flex-col justify-center h-auto w-full">
+                            <img class="max-h-30vh max-w-full w-auto object-contain" src="../../imgs/task_scheduling_overview.png"/>
+                            <p class="mt-2 text-center">
+                                Illustration of the task scheduling API.
+                            </p>
+                        </div>
+
+                        <p class="text-gray-600 mt-2">
+                            This is akin to a minimal, single-worker, single Python process version of Celery+RabbitMQ.
+                        </p>
+
+                        <h2 class="text-2xl font-bold text-gray-800">Implementing a job executor</h2>
+
+                        <p class="text-gray-600 mt-2 text-justify">
+                            For modularity, the thread executor API is compatible with OOP principles. Implementing the task queue can be simply done by overriding the following functions:
+                        </p>
+
+                        <ul class="list-disc list-inside mt-2">
+                            <li><code class="text-gray-800">_handle_all_requests(self, all_requests_queue: list[str], data: dict[str, AbstractRequest]) -> None:</code></li>
+                            <li><code class="text-gray-800">_handle_request_cancel(self, token: str, req: AbstractRequest) -> None:</code></li>
+                        </ul>
+
+                        <p class="text-gray-600 mt-2 text-justify">
+                            This allows flexibility to process requests in a custom manner, such as batched inference of ML models, or using optimal strategies such as sorting according to
+                            input size and so on. Inside the _handle_all_requests function, the executor can call <code class="text-gray-800">self.accept(tok: str, AbstractResponse)</code>
+                            or <code class="text-gray-800">self.reject(tok: str, msg: str)</code> where tok is the task ID, along with a response object that stores the necessary data.
+                        </p>
+
+                        <h2 class="text-2xl font-bold text-gray-800">Implementing the data classes</h2>
+                        <p class="text-gray-600 mt-2 text-justify">
+                            The AbstractRequest and AbstractResponse classes are abstract classes that can be extended to store the necessary data for the task. For example, the AbstractRequest
+                            class can store the code snippet to be completed, and the AbstractResponse class can store the completion suggestion. The AbstractRequest class can also store the
+                            task ID, which is used to poll the status of the task.
+                        </p>
+
+                        <h2 class="text-2xl font-bold text-gray-800">Invoking the job executor</h2>
+                        <p class="text-gray-600 mt-2 text-justify">
+                            The job executor's thread can be run and stopped with the <code class="text-gray-800">.start()</code> and <code class="text-gray-800">.stop()</code> methods respectively.
+                            A separate thread can queue a task by passing an instance of an implemented AbstractRequest object to the <code class="text-gray-800">.queue_request()</code> method, and
+                            poll the status of the task by passing the task ID to the <code class="text-gray-800">.poll_response()</code> method, which returns <code class="text-gray-800">None</code>
+                            if the task is still ongoing, an <code class="text-gray-800">ErrorResponse</code> if the task has failed, or the corresponding instance of
+                            <code class="text-gray-800">AbstractResponse</code> if the task has completed.
+                        </p>
+
+                        <h2 class="text-2xl font-bold text-gray-800">Routing to functions</h2>
+                        <p class="text-gray-600 mt-2 text-justify">
+                            When it is necessary to call different functions based on the nature of the task (e.g different prompts for different conditions although running on the same LLM), we have
+                            to use different functions to handle the requests. Instead of using multiple if branches inside the <code class="text-gray-800">_handle_all_requests</code> function, it is
+                            possible to use <code class="text-gray-800">SingleThreadExecutorRouterWrapper</code> to use a declarative approach that registers handling functions to the router, where all
+                            tasks are still handled in a single thread.
+                        </p>
+                    </header>
+                </div>
+            </section>
+        </div>
+
+        <footer class="bg-white shadow fixed bottom-0 left-0 right-0 z-10">
+            <div class="container mx-auto px-6 py-4">
+                <p class="text-center text-gray-800">© 2025 CHAU Yu Hei</p>
+            </div>
+        </footer>
+    </div>
+</body>
+</html>

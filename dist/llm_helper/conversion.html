@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LLM Helper Utilities</title>
+    <link href="../output.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/styles/default.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/highlight.min.js"></script>
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+        }
+
+        #page-container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        #content-wrap {
+            flex: 1;
+            overflow-y: auto;
+            padding-bottom: 4rem;
+        }
+
+        .custom-shadow {
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+
+    <script>
+        function openPopup(id) {
+            const popup = document.getElementById(id);
+            popup.classList.remove("hidden");
+            document.body.classList.add("overflow-hidden");
+        }
+
+        function closePopup(id) {
+            const popup = document.getElementById(id);
+            popup.classList.add("hidden");
+            document.body.classList.remove("overflow-hidden");
+        }
+    </script>
+</head>
+<body class="bg-gray-100">
+    <div id="about" class="hidden fixed top-0 left-0 right-0 bottom-0 bg-gray-900/50 flex items-center justify-center z-20 transition-opacity duration-300 ease-in-out">
+        <div class="bg-white p-6 rounded-lg max-w-md custom-shadow">
+            <h2 class="text-2xl font-bold text-gray-800">About</h2>
+            <p class="mt-4 text-gray-600 text-justify">
+              This website showcases an (ongoing) implementation of a code completion system based on the Qwen2.5-Coder family of models. It contains a VSCode extension that sends code snippets to a server, which then returns a single line
+              completion suggestion. The server is implemented in Python using a custom API server for logins, and a custom message queue for handling requests from multiple clients into a single thread for running the model on GPU. The client
+              is implemented in TypeScript using the VSCode extension development API, and additionally contains some custom GUIs for displaying differences between two code snippets for comparison.
+            </p>
+            <button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600" onclick="closePopup('about')">Close</button>
+        </div>
+    </div>
+
+    <div id="page-container" class="flex flex-col min-h-screen">
+        <header class="bg-white shadow fixed top-0 left-0 right-0 z-10">
+            <div class="container mx-auto px-6 py-4">
+                <div class="flex justify-between items-center">
+                    <a class="text-xl font-bold text-gray-800">Custom VSCode Copilot Extension</a>
+                    <div class="flex space-x-4">
+                        <a href="./index.html" class="px-3 py-2 text-gray-800 text-sm hover:text-indigo-500 cursor-pointer">Back</a>
+                        <a class="px-3 py-2 text-gray-800 text-sm hover:text-indigo-500 cursor-pointer" onclick="openPopup('about')">About</a>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <div id="content-wrap" class="mt-16 mb-16">
+            <section class="container mx-auto px-6 py-10">
+                <div class="flex flex-col space-y-6">
+                    <header class="mb-4">
+                        <h1 class="text-3xl font-bold text-gray-800">LLM Helper Conversion</h1>
+                        <p class="text-gray-600 mt-2 text-justify">
+                            Recall that in NVIDIA's <a class="mt-auto text-yellow-500 hover:text-yellow-600 hover:underline" href="https://docs.nvidia.com/tensorrt-llm/index.html">TensorRT-LLM</a>,
+                            the efficient C++ <a class="mt-auto text-yellow-500 hover:text-yellow-600 hover:underline" href="https://nvidia.github.io/TensorRT-LLM/_cpp_gen/executor.html">executor</a>
+                            requires the model to be converted into a TensorRT engine before it can be run. As of now (Feb 2025), the <a href="https://nvidia.github.io/TensorRT-LLM/architecture/workflow.html#conversion-apis">conversion APIs</a>
+                            do not yet fully support a variety of configurations such as tensor parallelism, so model specific conversion scripts with <span class="text-gray-800">trtllm-build</span> have to be used (see <a class="mt-auto text-yellow-500 hover:text-yellow-600 hover:underline" href="https://github.com/NVIDIA/TensorRT-LLM/tree/main/examples">here</a>).
+                            This makes bulk automatic conversion of models inconvenient, and requires manual creation of specific commands for each model.
+                        </p>
+                        <p class="text-gray-600 mt-2 text-justify">
+                            To support automated conversion, LLM Helper starts a Python subprocess (spawn) to run the conversion from <span class="text-gray-800">.safetensors</span> to model files of different ranks (<span class="text-gray-800">rank0.safetensors</span>, <span class="text-gray-800">rank1.safetensors</span>, etc),
+                            and then using the folder that contain the ranks, it converts the model to TensorRT engines (<span class="text-gray-800">rank0.engine</span>, <span class="text-gray-800">rank1.engine</span>, etc). A subprocess is used in order to avoid crashing the bulk conversion script because of memory errors or GPU memory
+                            errors, and ensures the GPU memory can be freed after each conversion.
+                        </p>
+                        <div class="flex flex-col justify-center h-auto w-full">
+                            <img class="max-h-30vh max-w-full w-auto object-contain" src="../../imgs/model_conversion.png"/>
+                            <p class="mt-2 text-center">
+                                Illustration of the conversion process.
+                            </p>
+                        </div>
+                    </header>
+                    <h2 class="text-2xl font-bold text-gray-800 mt-4">Configuration</h2>
+                    <p class="text-gray-600 mt-2 text-justify">
+                        To facilitate convenient loading of previously converted checkpoints or models, LLM Helper supports using a <span class="text-gray-800">.json</span> file that specifies a path to a folder containing all relevant
+                        converted checkpoints or TensorRT engines. The <span class="text-gray-800">CheckpointWorkspaceManager</span> and <span class="text-gray-800">EngineWorkspaceManager</span> classes contain utilities to load existing
+                        converted checkpoints / engines by specifiying the JSON configuration, model name and conversion configurations.
+                    </p>
+
+                    <h2 class="text-2xl font-bold text-gray-800 mt-4">Example Usage</h2>
+                    <div class="w-full overflow-x-auto">
+                        <pre><code class="language-python">import sys
+import multiprocessing as mp
+sys.path.append("../src")
+if __name__ == "__main__": # guard so subprocess won't run it
+    mp.set_start_method("spawn", force=True)
+import llm_helper.trt_models as trt_models
+import llm_helper.registered_models as registered_models
+from tensorrt_llm.quantization import QuantAlgo
+
+"""Store checkpoint conversion configuration"""
+quant_config_noquant = trt_models.HFConversionQuantizationProfile(dtype="bfloat16")
+quant_config_qint8 = trt_models.HFConversionQuantizationProfile(dtype="auto", quant_algorithm=QuantAlgo.W8A16)
+quant_config_qint4 = trt_models.HFConversionQuantizationProfile(dtype="auto", quant_algorithm=QuantAlgo.W4A16)
+quant_config_calib_int8 = trt_models.CalibrationQuantizationProfile(qformat="int8_sq")
+quant_config_calib_int4 = trt_models.CalibrationQuantizationProfile(qformat="int4_awq")
+
+parallel_mapping_1GPU = trt_models.ParallelMapping(tp_size=1, pp_size=1)
+parallel_mapping_DGPU_TP = trt_models.ParallelMapping(tp_size=2, pp_size=1)
+parallel_mapping_DGPU_PP = trt_models.ParallelMapping(tp_size=1, pp_size=2)
+
+conversion_profiles = {
+    "BF16-1GPU": trt_models.ConversionCheckpointProfile(
+                                quant_config=quant_config_noquant,
+                                parallel_mapping=parallel_mapping_1GPU),
+    "BF16-DGPU_TP": trt_models.ConversionCheckpointProfile(
+                                quant_config=quant_config_noquant,
+                                parallel_mapping=parallel_mapping_DGPU_TP),
+    "BF16-DGPU_PP": trt_models.ConversionCheckpointProfile(
+                                quant_config=quant_config_noquant,
+                                parallel_mapping=parallel_mapping_DGPU_PP),
+    "QINT8-1GPU": trt_models.ConversionCheckpointProfile(
+                                quant_config=quant_config_qint8,
+                                parallel_mapping=parallel_mapping_1GPU),
+    "QINT8-DGPU_TP": trt_models.ConversionCheckpointProfile(
+                                quant_config=quant_config_qint8,
+                                parallel_mapping=parallel_mapping_DGPU_TP),
+    "QINT8-DGPU_PP": trt_models.ConversionCheckpointProfile(
+                                quant_config=quant_config_qint8,
+                                parallel_mapping=parallel_mapping_DGPU_PP),
+    "QINT4-1GPU": trt_models.ConversionCheckpointProfile(
+                                quant_config=quant_config_qint4,
+                                parallel_mapping=parallel_mapping_1GPU),
+    "QINT4-DGPU_TP": trt_models.ConversionCheckpointProfile(
+                                quant_config=quant_config_qint4,
+                                parallel_mapping=parallel_mapping_DGPU_TP),
+    "QINT4-DGPU_PP": trt_models.ConversionCheckpointProfile(
+                                quant_config=quant_config_qint4,
+                                parallel_mapping=parallel_mapping_DGPU_PP),
+    "CALIB_INT8-1GPU": trt_models.ConversionCheckpointProfile(
+                                quant_config=quant_config_calib_int8,
+                                parallel_mapping=parallel_mapping_1GPU),
+    "CALIB_INT8-DGPU_TP": trt_models.ConversionCheckpointProfile(
+                                quant_config=quant_config_calib_int8,
+                                parallel_mapping=parallel_mapping_DGPU_TP),
+}
+models = list(registered_models.get_registered_models().keys()) # list all registered HF models and convert them
+workspace = trt_models.CheckpointWorkspaceManager(working_directory="path/to/checkpoints",
+                                                    input_models=models,
+                                                    conversion_ckpt_profiles=conversion_profiles)
+workspace.save_manager_configuration("path/to/workspace_ckpt_config.json")
+
+"""Store engine conversion configuration"""
+def get_devices_list(prof: trt_models.ConversionCheckpointProfile):
+    if prof.parallel_mapping.world_size == 1:
+        return [0]
+    else:
+        return [0, 1]
+conversion_engine_profiles = {k: trt_models.ConversionEngineProfile(build_config=build_config, devices_list=get_devices_list(conversion_profiles[k]))
+                                    for k in conversion_profiles.keys()}
+
+build_config = trt_models.BuildConfiguration(weight_sparsity=True,
+            use_fused_mlp=True,
+            use_paged_context_fmha=True,
+            paged_kv_cache=True)
+engine_workspace = trt_models.EngineWorkspaceManager(working_directory="path/to/engines",
+                                                        checkpoints_manager=workspace,
+                                                        conversion_engine_profiles=conversion_engine_profiles)
+engine_workspace.save_manager_configuration("path/to/workspace_engine_config.json")
+
+if __name__ == "__main__":
+    """Load the checkpoint configuration and convert them in bulk"""
+    workspace = trt_models.CheckpointWorkspaceManager.load_manager_configuration("path/to/workspace_ckpt_config.json")
+    manager = trt_models.CheckpointConversionManager(workspace)
+    manager.convert_checkpoints()
+
+    """Load the engine configuration and convert them in bulk"""
+    engine_workspace = trt_models.EngineWorkspaceManager.load_manager_configuration("path/to/workspace_engine_config.json", workspace)
+    manager = trt_models.EngineConversionManager(engine_workspace)
+    manager.convert_engines()
+
+    """Load a previously converted model (e.g LLAMA3 8B IT)"""
+    executor, tokenizer = engine_workspace.load_engine_and_tokenizer("LLAMA3-8B-IT", "QINT4-DGPU_TP") # with int4 quantization and tensor parallelism
+                        </code></pre>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <script>
+            hljs.highlightAll();
+        </script>
+
+        <footer class="bg-white shadow fixed bottom-0 left-0 right-0 z-10">
+            <div class="container mx-auto px-6 py-4">
+                <p class="text-center text-gray-800">© 2025 CHAU Yu Hei</p>
+            </div>
+        </footer>
+    </div>
+</body>
+</html>

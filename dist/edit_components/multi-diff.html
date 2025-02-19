@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Difference Chooser</title>
+    <link href="../output.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/styles/default.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/highlight.min.js"></script>
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+        }
+
+        #page-container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        #content-wrap {
+            flex: 1;
+            overflow-y: auto;
+            padding-bottom: 4rem;
+        }
+
+        .custom-shadow {
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+
+    <script>
+        function openPopup(id) {
+            const popup = document.getElementById(id);
+            popup.classList.remove("hidden");
+            document.body.classList.add("overflow-hidden");
+        }
+
+        function closePopup(id) {
+            const popup = document.getElementById(id);
+            popup.classList.add("hidden");
+            document.body.classList.remove("overflow-hidden");
+        }
+    </script>
+</head>
+<body class="bg-gray-100">
+    <div id="about" class="hidden fixed top-0 left-0 right-0 bottom-0 bg-gray-900/50 flex items-center justify-center z-20 transition-opacity duration-300 ease-in-out">
+        <div class="bg-white p-6 rounded-lg max-w-md custom-shadow">
+            <h2 class="text-2xl font-bold text-gray-800">About</h2>
+            <p class="mt-4 text-gray-600 text-justify">
+              This website showcases an (ongoing) implementation of a code completion system based on the Qwen2.5-Coder family of models. It contains a VSCode extension that sends code snippets to a server, which then returns a single line
+              completion suggestion. The server is implemented in Python using a custom API server for logins, and a custom message queue for handling requests from multiple clients into a single thread for running the model on GPU. The client
+              is implemented in TypeScript using the VSCode extension development API, and additionally contains some custom GUIs for displaying differences between two code snippets for comparison.
+            </p>
+            <button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600" onclick="closePopup('about')">Close</button>
+        </div>
+    </div>
+
+    <div id="page-container" class="flex flex-col min-h-screen">
+        <header class="bg-white shadow fixed top-0 left-0 right-0 z-10">
+            <div class="container mx-auto px-6 py-4">
+                <div class="flex justify-between items-center">
+                    <a class="text-xl font-bold text-gray-800">Custom VSCode Copilot Extension</a>
+                    <div class="flex space-x-4">
+                        <a href="./index.html" class="px-3 py-2 text-gray-800 text-sm hover:text-indigo-500 cursor-pointer">Back</a>
+                        <a class="px-3 py-2 text-gray-800 text-sm hover:text-indigo-500 cursor-pointer" onclick="openPopup('about')">About</a>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <div id="content-wrap" class="mt-16 mb-16">
+            <section class="container mx-auto px-6 py-10">
+                <div class="flex flex-col space-y-6">
+                    <header class="mb-4">
+                        <article class="prose text-gray-700 w-full max-w-none">
+                            <div id="markdown-output"></div>
+                        </article>
+                    </header>
+                </div>
+            </section>
+        </div>
+        <script type="text/plain" id="markdown"># MultiDiffViewer Component
+
+The `MultiDiffViewer` is a custom web component designed to display multiple differences of a source code file in a tabbed interface. It utilizes the existing `TabWidget` and `DiffViewer` components to provide a rich and interactive experience for viewing and resolving code differences, particularly useful in version control systems like Git for branch merging.
+
+## Features
+
+- **Tabbed Interface**: Displays each code difference in a separate tab using `TabWidget`.
+- **Difference Viewing**: Each tab contains a `DiffViewer` showing the differences between the original code and a changed version.
+- **Choice Buttons**: Optionally enables "Reject" and "Accept" buttons in each `DiffViewer` for user interaction.
+- **Customization**: Exposes API methods to customize styles of tabs, buttons, and other UI elements.
+- **Event Handling**: Emits events when users interact with the choice buttons, allowing integration with external logic.
+
+## Folder Structure
+
+```
+src/
+    multi_diff_viewer/
+    index.ts
+    MultiDiffViewer.ts
+    README.md
+```
+
+- `index.ts`: Entry point for the component, exporting `MultiDiffViewer`.
+- `MultiDiffViewer.ts`: Contains the `MultiDiffViewer` class, implementing the web component.
+- `README.md`: This README file.
+
+## Usage
+
+### Importing and Registering the Component
+
+```typescript
+import './multi_diff_viewer';
+```
+
+### Including in HTML
+
+```html
+<multi-diff-viewer id="myMultiDiff"></multi-diff-viewer>
+```
+
+### Setting Up the MultiDiffViewer
+
+```typescript
+const multiDiffViewer = document.getElementById('myMultiDiff') as MultiDiffViewer;
+
+const originalCode = `function add(a, b) {
+    return a + b;
+}`;
+
+const changedCodes = [
+    `function addNumbers(a, b) {
+    return a + b + 1;
+    }`,
+    `function add(a, b, c) {
+    return a + b + c;
+    }`,
+];
+
+multiDiffViewer.setCompareStrings(originalCode, changedCodes);
+
+// Enable choice buttons with default style
+multiDiffViewer.enableChoiceButtonsWithDefaultStyle();
+
+// Customize the TabWidget styles
+multiDiffViewer.setSidebarStyle('width: 150px; background-color: #f9f9f9;');
+multiDiffViewer.setTabButtonsStyle('font-size: 14px;');
+multiDiffViewer.setTabButtonActiveStyle('background-color: #e0e0e0;');
+multiDiffViewer.setTabButtonsInactiveStyle('background-color: #ffffff;');
+```
+
+## API Methods
+
+### `setCompareStrings(original: string, news: string[], tabNames: string[] | null = null, originalDisplayName: string | null = null, tabDisplayNames: string[] | null = null): void`
+
+Sets the strings to compare. Removes all existing tabs and creates new ones. Note that either both originalDisplayName and tabDisplayNames are null, or both non-null.
+
+- **Parameters:**
+    - `original`: The original string (source code).
+    - `news`: An array of new strings to compare with the original.
+    - `tabNames`: Optional array of tab names. Must match the length of `news`.
+    - `originalDisplayName`: Optional string of display names for the original part.
+    - `tabDisplayNames`: Optional array of tab display names. Must match the length of `news`.
+
+**Example:**
+
+```typescript
+multiDiffViewer.setCompareStrings(originalCode, changedCodes, ['Change 1', 'Change 2']);
+```
+
+### `enableChoiceButtonsWithDefaultStyle(): void`
+
+Enables the choice buttons ("Reject" and "Accept") with default styling in all `DiffViewer` instances.
+
+**Example:**
+
+```typescript
+multiDiffViewer.enableChoiceButtonsWithDefaultStyle();
+```
+
+### `enableChoiceButtons(btn1Style: string | null = null, btn2Style: string | null = null, btn1HoverStyle: string | null = null, btn2HoverStyle: string | null = null): void`
+
+Enables the choice buttons with custom styles.
+
+- **Parameters:**
+    - `btn1Style`: CSS styles for the "Reject" button.
+    - `btn2Style`: CSS styles for the "Accept" button.
+    - `btn1HoverStyle`: CSS hover styles for the "Reject" button.
+    - `btn2HoverStyle`: CSS hover styles for the "Accept" button.
+
+**Example:**
+
+```typescript
+multiDiffViewer.enableChoiceButtons(
+    'color: red;',
+    'color: green;',
+    'background-color: lightcoral;',
+    'background-color: lightgreen;'
+);
+```
+
+### `disableChoiceButtons(): void`
+
+Disables the choice buttons in all `DiffViewer` instances.
+
+**Example:**
+
+```typescript
+multiDiffViewer.disableChoiceButtons();
+```
+
+### `addCssFormatting(styleLink: string): void`
+
+Sets the HLJS CSS formatting to the DiffViewers for formatting the code.
+
+- **Parameters:**
+    - `styleLink`: The link URL to the css style file.
+
+**Example:**
+
+```typescript
+multiDiffViewer.addCssFormatting("node_modules/highlight.js/styles/default.min.css");
+```
+
+### `removeCssFormatting(): void`
+
+Removes the HLJS CSS formatting for the DiffViewers for formatting the code.
+
+**Example:**
+
+```typescript
+multiDiffViewer.removeCssFormatting();
+```
+
+### `getTabNames(): string[]`
+
+Gets the names of the tabs for the multi difference viewer.
+
+**Example:**
+
+```typescript
+multiDiffViewer.getTabNames();
+```
+
+### Other styling methods
+
+- **`setSidebarStyle(style: string): void`**: Sets custom styles for the sidebar.
+- **`setTabButtonsStyle(style: string): void`**: Sets custom styles for all tab buttons.
+- **`setTabButtonActiveStyle(style: string): void`**: Sets custom styles for the active tab button.
+- **`setTabButtonsInactiveStyle(style: string): void`**: Sets custom styles for inactive tab buttons.
+- **`setBottomButtonsStyle(style: string, hoverStyle: string | null = null): void`**: Sets the styles for the bottom buttons in `DiffViewer` instances.
+- **`enablePrevNextButtons(): void`**: Enables the prev next buttons in the sidebar.
+- **`disablePrevNextButtons(): void`**: Disables the prev next buttons in the sidebar.
+
+**Example:**
+
+```typescript
+multiDiffViewer.setSidebarStyle('background-color: #f0f0f0; width: 180px;');
+multiDiffViewer.setTabButtonsStyle('font-weight: bold;');
+multiDiffViewer.setTabButtonActiveStyle('color: blue;');
+multiDiffViewer.setTabButtonsInactiveStyle('color: gray;');
+multiDiffViewer.setBottomButtonsStyle('font-size: 12px; padding: 5px;', 'opacity: 0.8;');
+```
+
+## Events
+
+The `MultiDiffViewer` component emits events to notify about user interactions.
+
+- **`cancel-selected`**
+
+    - Emitted when any "Reject" button is clicked in a `DiffViewer`.
+    - **Usage:**
+
+    ```typescript
+    multiDiffViewer.addEventListener('cancel-selected', () => {
+        console.log('Change was rejected.');
+    });
+    ```
+
+- **`change-selected`**
+
+    - Emitted when any "Accept" button is clicked in a `DiffViewer`.
+    - **Details:**
+    - `index`: The index of the tab where the event occurred.
+    - **Usage:**
+
+    ```typescript
+    multiDiffViewer.addEventListener('change-selected', (event: CustomEvent) => {
+        console.log(`Change accepted at tab index: ${event.detail.index}`);
+    });
+    ```
+
+## Handling Edge Cases
+
+- **Persistent Styles and Settings**: The component stores style settings and choice button states internally to ensure they persist across multiple calls to `setCompareStrings`.
+- **Input Validation**: Throws an error if `tabNames` length does not match the length of `news`.
+- **Event Management**: Properly manages event listeners to prevent memory leaks and unexpected behaviors.
+
+## Dependencies
+
+- **TabWidget**: For the tabbed interface.
+- **DiffViewer**: For displaying and interacting with code differences.
+
+Ensure that `TabWidget` and `DiffViewer` are properly imported and registered before using `MultiDiffViewer`.
+
+## Conclusion
+
+The `MultiDiffViewer` component offers a flexible and powerful way to visualize and interact with multiple code differences in a user-friendly interface. By leveraging the existing `TabWidget` and `DiffViewer` components, it provides rich functionality suitable for applications like version control systems and collaborative code editing tools.            
+        </script>
+        <script>
+            var markdownText = document.getElementById("markdown").textContent;
+            var htmlContent = marked.parse(markdownText);
+            document.getElementById('markdown-output').innerHTML = htmlContent;
+            hljs.highlightAll();
+        </script>
+
+        <footer class="bg-white shadow fixed bottom-0 left-0 right-0 z-10">
+            <div class="container mx-auto px-6 py-4">
+                <p class="text-center text-gray-800">© 2025 CHAU Yu Hei</p>
+            </div>
+        </footer>
+    </div>
+</body>
+</html>

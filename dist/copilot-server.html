@@ -3,9 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Project Title - Custom Copilot Showcase</title>
-    <link href="output.css" rel="stylesheet">
-    <!-- <script src="https://unpkg.com/@tailwindcss/browser@4"></script> -->
+    <title>Copilot Serving API</title>
+    <link href="./output.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/styles/default.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/highlight.min.js"></script>
     <style>
         html, body {
             height: 100%;
@@ -48,7 +50,7 @@
         <div class="bg-white p-6 rounded-lg max-w-md custom-shadow">
             <h2 class="text-2xl font-bold text-gray-800">About</h2>
             <p class="mt-4 text-gray-600 text-justify">
-              This website showcases an (incomplete) implementation of a code completion system based on the Qwen2.5-Coder family of models. It contains a VSCode extension that sends code snippets to a server, which then returns a single line
+              This website showcases an (ongoing) implementation of a code completion system based on the Qwen2.5-Coder family of models. It contains a VSCode extension that sends code snippets to a server, which then returns a single line
               completion suggestion. The server is implemented in Python using a custom API server for logins, and a custom message queue for handling requests from multiple clients into a single thread for running the model on GPU. The client
               is implemented in TypeScript using the VSCode extension development API, and additionally contains some custom GUIs for displaying differences between two code snippets for comparison.
             </p>
@@ -60,7 +62,7 @@
         <header class="bg-white shadow fixed top-0 left-0 right-0 z-10">
             <div class="container mx-auto px-6 py-4">
                 <div class="flex justify-between items-center">
-                    <a class="text-xl font-bold text-gray-800" href="index.html">Relevant Repos for a Custom Copilot Extension</a>
+                    <a class="text-xl font-bold text-gray-800">Custom VSCode Copilot Extension</a>
                     <div class="flex space-x-4">
                         <a href="./index.html" class="px-3 py-2 text-gray-800 text-sm hover:text-indigo-500 cursor-pointer">Back</a>
                         <a class="px-3 py-2 text-gray-800 text-sm hover:text-indigo-500 cursor-pointer" onclick="openPopup('about')">About</a>
@@ -71,52 +73,389 @@
 
         <div id="content-wrap" class="mt-16 mb-16">
             <section class="container mx-auto px-6 py-10">
-                <div class="flex flex-col space-y-6">
+                <div class="flex flex-col space-y-6 items-center">
                     <header class="mb-4">
-                        <h1 class="text-3xl font-bold text-gray-800">Project Title</h1>
-                        <p class="text-gray-600 mt-2">A brief tagline or subtitle for the project.</p>
-                    </header>
+                        <span class="text-3xl font-bold text-gray-800">Copilot Serving API</span>
+                        <a href="https://github.com/louis845/local_copilot_server" class="px-4 py-2 text-gray-800 text-sm hover:text-indigo-500 cursor-pointer flex flex-col items-center inline-flex">
+                            <svg class="inline-block" height="32" aria-hidden="true" viewBox="0 0 24 24" version="1.1" width="32" data-view-component="true">
+                                <path d="M12.5.75C6.146.75 1 5.896 1 12.25c0 5.089 3.292 9.387 7.863 10.91.575.101.79-.244.79-.546 0-.273-.014-1.178-.014-2.142-2.889.532-3.636-.704-3.866-1.35-.13-.331-.69-1.352-1.18-1.625-.402-.216-.977-.748-.014-.762.906-.014 1.553.834 1.769 1.179 1.035 1.74 2.688 1.25 3.349.948.1-.747.402-1.25.733-1.538-2.559-.287-5.232-1.279-5.232-5.678 0-1.25.445-2.285 1.178-3.09-.115-.288-.517-1.467.115-3.048 0 0 .963-.302 3.163 1.179.92-.259 1.897-.388 2.875-.388.977 0 1.955.13 2.875.388 2.2-1.495 3.162-1.179 3.162-1.179.633 1.581.23 2.76.115 3.048.733.805 1.179 1.825 1.179 3.09 0 4.413-2.688 5.39-5.247 5.678.417.36.776 1.05.776 2.128 0 1.538-.014 2.774-.014 3.162 0 .302.216.662.79.547C20.709 21.637 24 17.324 24 12.25 24 5.896 18.854.75 12.5.75Z"></path>
+                            </svg>
+                            GitHub Code
+                        </a>
+                        <p class="text-gray-600 mt-2 text-justify">
+                            This is the server code that handles the code completion requests from the VSCode extension. It is implemented in Python, and uses
+                            the <a class="mt-auto text-indigo-500 hover:text-indigo-600 hover:underline" href="../dist/client_server/index.html">Server API</a> and
+                            <a class="mt-auto text-indigo-500 hover:text-indigo-600 hover:underline" href="../dist/task_scheduling/index.html">Task Scheduling API</a>
+                            to handle incoming requests (akin to FastAPI+Celery+RabbitMQ). The server is responsible for running the model on the GPU, so that the
+                            VSCode extension can be run in any environment as long as the server is reachable.
+                        </p>
+                        <br>
+                        <h2 class="text-2xl font-bold text-gray-800">Initial attempt (that did not quite work)</h2>
+                        <p class="text-gray-600 mt-2 text-justify">
+                            The initial attempt was to leverage instruction tuned LLM (7B-14B models, Llama3, Phi3(.5)) in context learning capabilities to provide code completions, where the output
+                            has to be in a specified Markdown format. The reason is that the computation resources I have for finetuning is not enough, so I attempted to use ICL with a few examples so that the
+                            model follows the format, and it will be possible to explicitly specify the compressed context of the code (function/class/attribute signatures) and the function body that is
+                            being edited with.
+                        </p>
+                        <p class="text-gray-600 mt-2 text-justify">
+                            Also, the models are to be prompted to provide fixes to a code snippet (for example, a particular function) with a message, and then the model could edit the highlighted parts and the
+                            difference will be clearly shown using <a class="mt-auto text-indigo-500 hover:text-indigo-600 hover:underline" href="./edit-components.html">Code Edit Web Components</a>. The user will
+                            be able to select a completion out of the completions generated by the model (using <span class="italic">beam width > 1</span>).
+                        </p>
+                        <p class="text-gray-600 mt-2 text-justify">
+                            However, the models have tendencies to output irrelevant tokens that do not adhere to the Markdown format during testing, showing that 2-3 shot ICL may be too weak for the
+                            instruction tuned models to restrict itself to a specified format. The remedy may be to use more in context examples or a more powerful model, which defeats the purpose of
+                            compressing the context in the first place. It seems necessary to use instruction fine tuning on the models so they adhere to a specified format, but I do not have the resources
+                            to do so. Therefore, I switched to Qwen2.5-Coder, which supports infilling natively.
+                        </p>
+                        <h2 class="text-2xl font-bold text-gray-800">Qwen2.5-Coder for completions</h2>
+                        <p class="text-gray-600 mt-2 text-justify">
+                            As the Qwen2.5 models support infilling natively, it becomes unnecessary to test out different prompt and response formats to get the models to output the infilled code. To accelerate
+                            the infilling process on less powerful GPUs, the infilling model only provides a completion for the current line, which is done by adding tokens that contains "\n" to the stopping criteria.
+                        </p>
+                        <h3 class="text-1xl font-bold text-gray-800">Code snippet pseudocode</h3>
+                        <pre><code>relevant_tokens = [tok for tok in range(len(tokenizer)) if tokenizer.decode([tok]).contains("\n")]
+class SingleLineCriteria(StoppingCriteria):
+    def __init__(self, relevant_tokens: list[int], device: torch.device):
+        self.relevant_tokens = torch.tensor(relevant_tokens, device=device, dtype=torch.long)
 
-                    <article class="prose prose-lg text-gray-700">
-                        <h2>Overview</h2>
-                        <p>
-                            Provide a detailed overview of the project here. Discuss the objectives, features, and the problem it solves.
+    def __call__(self, input_ids: torch.Tensor, scores: torch.Tensor) -> torch.Tensor:
+        """batched stopping criteria"""
+        return torch.any(input_ids[:, -1] == self.relevant_tokens.unsqueeze(-1), dim=0)
+
+criteria = SingleLineCriteria(relevant_tokens, device)
+def generate_singleline_completion(context_tokens: list[int]) -> str:
+    result: list[int] = model.generate(context_tokens, max_length=1024, num_return_sequences=1,
+                            stopping_criteria=criteria)[0]
+    result: str = tokenizer.decode(result[len(context_tokens):])
+    idx: int = result.find("\n")
+    if idx != -1:
+        result = result[:idx]
+    return result</code></pre>
+                        <p class="text-gray-600 mt-2 text-justify">
+                            This balances a tradeoff between the ability to generate multi-line completions versus a fast generation speed. Choosing to only allow single line completions
+                            makes the user interaction more responsive.
                         </p>
-                        <h2>Technologies Used</h2>
-                        <ul>
-                            <li>Tailwind CSS</li>
-                            <li>JavaScript</li>
-                            <li>HTML5</li>
-                            <li>[Add more technologies as needed]</li>
-                        </ul>
-                        <h2>Features</h2>
-                        <p>
-                            Highlight the key features of your project. Use subheadings or bullet points for clarity.
+                        <h3 class="text-1xl font-bold text-gray-800">Context tokens preprocessing</h3>
+                        <p class="text-gray-600 mt-2 text-justify">
+                            To obtain the context tokens, the VSCode extension simplifies the context by removing the function/class/attribute signature except the relevant functions from the code using the <a class="mt-auto text-indigo-500 hover:text-indigo-600 hover:underline" href="./parser.html">Parser module</a>,
+                            and sends the compressed code to the server. The server will then use the templates module of <a class="mt-auto text-indigo-500 hover:text-indigo-600 hover:underline" href="./llm_helper/templates.html">LLMHelper library</a> to obtain
+                            the context tokens, which is then used to generate the completion. Of course, the server uses the <a class="mt-auto text-indigo-500 hover:text-indigo-600 hover:underline" href="./client_server/server.html">ServerAPI</a> and
+                            <a class="mt-auto text-indigo-500 hover:text-indigo-600 hover:underline" href="./task_scheduling/index.html">Task Scheduling API</a> to handle the requests.
                         </p>
-                        <h2>Installation</h2>
-                        <p>
-                            Provide instructions on how to install and set up the project locally. Include code snippets if necessary.
+                        <h2 class="text-2xl font-bold text-gray-800">Example context tokens preprocessing</h2>
+                        <p class="text-gray-600 mt-2 text-justify">
+                            Here is an example of how the context tokens are obtained using the following code snippet ([1] -> [2] -> [3]):
                         </p>
-                        <h2>Usage</h2>
-                        <p>
-                            Describe how to use the project. Include any relevant commands or configurations.
-                        </p>
-                        <h2>Contributing</h2>
-                        <p>
-                            If you welcome contributions, provide guidelines here.
-                        </p>
-                        <h2>License</h2>
-                        <p>
-                            Specify the project's license.
-                        </p>
-                        <h2>Contact</h2>
-                        <p>
-                            Provide your contact information or links to your social profiles.
-                        </p>
-                    </article>
+                        <h3 class="text-1xl font-bold text-gray-800">[1] File in user workspace (current cursor line position is indicated by [LINE TO COMPLETE])</h3>
+                        <pre><code>from typing import Any
+
+from PySide2.QtWidgets import QWidget, QVBoxLayout, QScrollArea
+from PySide2.QtCore import QEvent, Qt
+from PySide2.QtGui import QWheelEvent
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib.figure import Figure
+
+from ..utils import plot_distribution
+
+class DistributionVisualization(QWidget):
+    vertical_scale: float
+    scroll_area: QScrollArea
+    canvas_widget: QWidget
+    canvas_layout: QVBoxLayout
+    figure: Figure
+    canvas: FigureCanvas
+
+    def __init__(self, parent=None):
+        """
+        Initializes the DistributionVisualization widget.
+
+        Args:
+            parent: The parent widget.
+        """
+        super().__init__(parent)
+
+        # Vertical scale factor
+        self.vertical_scale: float = 0.95
+
+        # Scroll area
+        self.scroll_area = QScrollArea(self)
+        self.scroll_area.setWidgetResizable(True)
+
+        # Canvas widget inside scroll area
+        self.canvas_widget = QWidget()
+        self.canvas_layout = QVBoxLayout(self.canvas_widget)
+        self.canvas_layout.setContentsMargins(0, 0, 0, 0)
+
+        # Matplotlib figure and canvas
+        self.figure = Figure(constrained_layout=True)
+        self.canvas = FigureCanvas(self.figure)
+        self.canvas_layout.addWidget(self.canvas)
+
+        # Set the canvas widget as the scroll area's widget
+        self.scroll_area.setWidget(self.canvas_widget)
+
+        # Main layout
+        main_layout = QVBoxLayout(self)
+        main_layout.setContentsMargins(0, 0, 0, 0)
+        main_layout.addWidget(self.scroll_area)
+
+        # Install event filters for wheel events
+        self.scroll_area.viewport().installEventFilter(self)
+    
+    def eventFilter(self, obj, event):
+        """
+        Event filter to capture wheel events for scaling.
+
+        Args:
+            obj: The object where the event occurred.
+            event: The event object.
+
+        Returns:
+            bool: True if the event is handled, False otherwise.
+        """
+        if event.type() == QEvent.Wheel and isinstance(event, QWheelEvent):
+            self.handle_wheel_event(event)
+            return True
+        return super().eventFilter(obj, event)
+
+    def handle_wheel_event(self, event: QWheelEvent):
+        """
+        Handles the wheel event to adjust vertical scale.
+
+        Args:
+            event (QWheelEvent): The wheel event.
+        """
+        delta = event.angleDelta().y()
+        if event.modifiers() & Qt.ControlModifier:
+            # Only adjust the scale if the Ctrl key is pressed
+            # Adjust the scale factor; divide by 1200 to control the scaling speed
+            scale_change = delta / 1200.0
+            new_scale = max(0.95, self.vertical_scale + scale_change)
+            if new_scale != self.vertical_scale:
+                self.vertical_scale = new_scale
+                # [LINE TO COMPLETE]
+            # Accept the event to prevent scrolling
+            event.accept()
+        else:
+            # scroll the self.scroll_area
+            self.scroll_area.verticalScrollBar().setValue(self.scroll_area.verticalScrollBar().value() - 0.1 * self.vertical_scale * delta)
+    
+    def resizeEvent(self, event):
+        """
+        Handle resize events to adjust the canvas size.
+
+        Args:
+            event: The resize event.
+        """
+        self.update_canvas_size()
+        super().resizeEvent(event)
+    
+    def update_canvas_size(self):
+        """
+        Updates the canvas size based on the current vertical scale and parent widget size.
+        """
+        parent_height = self.height()
+        new_height = int(parent_height * self.vertical_scale)
+        self.canvas_widget.setMinimumHeight(new_height)
+        self.canvas_widget.resize(self.canvas_widget.width(), new_height)
+
+    def update_plot(self,
+                    information: dict[str, dict[str, Any]],
+                    token_choices: list[str]):
+        """
+        Updates the distribution plot.
+
+        Args:
+            information (dict[str, dict[str, Any]]): The stratified data for plotting.
+        """
+        self.figure.clf()
+        ax = self.figure.add_subplot(111)
+        plot_distribution(ax, information, token_choices)
+        self.canvas.draw()
+                        </code></pre>
+                        <h3 class="text-1xl font-bold text-gray-800">[2] Compressed context</h3>
+                        <pre><code>from typing import Any
+
+from PySide2.QtWidgets import QWidget, QVBoxLayout, QScrollArea
+from PySide2.QtCore import QEvent, Qt
+from PySide2.QtGui import QWheelEvent
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib.figure import Figure
+
+from ..utils import plot_distribution
+
+class DistributionVisualization(QWidget):
+    vertical_scale: float
+    scroll_area: QScrollArea
+    canvas_widget: QWidget
+    canvas_layout: QVBoxLayout
+    figure: Figure
+    canvas: FigureCanvas
+
+    def __init__(self, parent=None):
+        """
+        Initializes the DistributionVisualization widget.
+
+        Args:
+            parent: The parent widget.
+        """
+    
+    def eventFilter(self, obj, event):
+        """
+        Event filter to capture wheel events for scaling.
+
+        Args:
+            obj: The object where the event occurred.
+            event: The event object.
+
+        Returns:
+            bool: True if the event is handled, False otherwise.
+        """
+
+    def handle_wheel_event(self, event: QWheelEvent):
+        """
+        Handles the wheel event to adjust vertical scale.
+
+        Args:
+            event (QWheelEvent): The wheel event.
+        """
+        delta = event.angleDelta().y()
+        if event.modifiers() & Qt.ControlModifier:
+            # Only adjust the scale if the Ctrl key is pressed
+            # Adjust the scale factor; divide by 1200 to control the scaling speed
+            scale_change = delta / 1200.0
+            new_scale = max(0.95, self.vertical_scale + scale_change)
+            if new_scale != self.vertical_scale:
+                self.vertical_scale = new_scale
+                # [LINE TO COMPLETE]
+            # Accept the event to prevent scrolling
+            event.accept()
+        else:
+            # scroll the self.scroll_area
+            self.scroll_area.verticalScrollBar().setValue(self.scroll_area.verticalScrollBar().value() - 0.1 * self.vertical_scale * delta)
+    
+    def resizeEvent(self, event):
+        """
+        Handle resize events to adjust the canvas size.
+
+        Args:
+            event: The resize event.
+        """
+    
+    def update_canvas_size(self):
+        """
+        Updates the canvas size based on the current vertical scale and parent widget size.
+        """
+
+    def update_plot(self,
+                    information: dict[str, dict[str, Any]],
+                    token_choices: list[str]):
+        """
+        Updates the distribution plot.
+
+        Args:
+            information (dict[str, dict[str, Any]]): The stratified data for plotting.
+        """
+                        </code></pre>
+                        <h3 class="text-1xl font-bold text-gray-800">[3] Context tokens</h3>
+                        <pre><code><|repo_name|>CodeRepo
+<|file_sep|>code_to_edit
+<|fim_prefix|>from typing import Any
+
+from PySide2.QtWidgets import QWidget, QVBoxLayout, QScrollArea
+from PySide2.QtCore import QEvent, Qt
+from PySide2.QtGui import QWheelEvent
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib.figure import Figure
+
+from ..utils import plot_distribution
+
+class DistributionVisualization(QWidget):
+    vertical_scale: float
+    scroll_area: QScrollArea
+    canvas_widget: QWidget
+    canvas_layout: QVBoxLayout
+    figure: Figure
+    canvas: FigureCanvas
+
+    def __init__(self, parent=None):
+        """
+        Initializes the DistributionVisualization widget.
+
+        Args:
+            parent: The parent widget.
+        """
+    
+    def eventFilter(self, obj, event):
+        """
+        Event filter to capture wheel events for scaling.
+
+        Args:
+            obj: The object where the event occurred.
+            event: The event object.
+
+        Returns:
+            bool: True if the event is handled, False otherwise.
+        """
+
+    def handle_wheel_event(self, event: QWheelEvent):
+        """
+        Handles the wheel event to adjust vertical scale.
+
+        Args:
+            event (QWheelEvent): The wheel event.
+        """
+        delta = event.angleDelta().y()
+        if event.modifiers() & Qt.ControlModifier:
+            # Only adjust the scale if the Ctrl key is pressed
+            # Adjust the scale factor; divide by 1200 to control the scaling speed
+            scale_change = delta / 1200.0
+            new_scale = max(0.95, self.vertical_scale + scale_change)
+            if new_scale != self.vertical_scale:
+                self.vertical_scale = new_scale
+                <|fim_suffix|>
+                # Accept the event to prevent scrolling
+                event.accept()
+            else:
+                # scroll the self.scroll_area
+                self.scroll_area.verticalScrollBar().setValue(self.scroll_area.verticalScrollBar().value() - 0.1 * self.vertical_scale * delta)
+        
+        def resizeEvent(self, event):
+            """
+            Handle resize events to adjust the canvas size.
+    
+            Args:
+                event: The resize event.
+            """
+        
+        def update_canvas_size(self):
+            """
+            Updates the canvas size based on the current vertical scale and parent widget size.
+            """
+    
+        def update_plot(self,
+                        information: dict[str, dict[str, Any]],
+                        token_choices: list[str]):
+            """
+            Updates the distribution plot.
+    
+            Args:
+                information (dict[str, dict[str, Any]]): The stratified data for plotting.
+            """<|fim_middle|>
+                        </code></pre>
+                    <h3 class="text-1xl font-bold text-gray-800">[4] Expected result</h3>
+                    <pre><code>self.update_canvas_size()</code></pre>
+                    </header>
                 </div>
             </section>
         </div>
+
+        <script>
+            document.querySelectorAll("pre code").forEach((block) => {
+                hljs.highlightBlock(block);
+            });
+        </script>
 
         <footer class="bg-white shadow fixed bottom-0 left-0 right-0 z-10">
             <div class="container mx-auto px-6 py-4">

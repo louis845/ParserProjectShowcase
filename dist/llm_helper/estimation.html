@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LLM Efficiency Benchmark GUI</title>
+    <link href="../output.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/styles/default.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.15.0/dist/katex.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.15.0/dist/katex.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.15.0/dist/contrib/auto-render.min.js"></script>
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+        }
+
+        #page-container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        #content-wrap {
+            flex: 1;
+            overflow-y: auto;
+            padding-bottom: 4rem;
+        }
+
+        .custom-shadow {
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+
+    <script>
+        function openPopup(id) {
+            const popup = document.getElementById(id);
+            popup.classList.remove("hidden");
+            document.body.classList.add("overflow-hidden");
+        }
+
+        function closePopup(id) {
+            const popup = document.getElementById(id);
+            popup.classList.add("hidden");
+            document.body.classList.remove("overflow-hidden");
+        }
+    </script>
+</head>
+<body class="bg-gray-100">
+    <div id="about" class="hidden fixed top-0 left-0 right-0 bottom-0 bg-gray-900/50 flex items-center justify-center z-20 transition-opacity duration-300 ease-in-out">
+        <div class="bg-white p-6 rounded-lg max-w-md custom-shadow">
+            <h2 class="text-2xl font-bold text-gray-800">About</h2>
+            <p class="mt-4 text-gray-600 text-justify">
+              This website showcases an (ongoing) implementation of a code completion system based on the Qwen2.5-Coder family of models. It contains a VSCode extension that sends code snippets to a server, which then returns a single line
+              completion suggestion. The server is implemented in Python using a custom API server for logins, and a custom message queue for handling requests from multiple clients into a single thread for running the model on GPU. The client
+              is implemented in TypeScript using the VSCode extension development API, and additionally contains some custom GUIs for displaying differences between two code snippets for comparison.
+            </p>
+            <button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600" onclick="closePopup('about')">Close</button>
+        </div>
+    </div>
+
+    <div id="popup_conversation" class="hidden fixed top-0 left-0 right-0 bottom-0 bg-gray-900/50 flex items-center justify-center z-20 transition-opacity duration-300 ease-in-out">
+        <div class="bg-white p-6 rounded-lg custom-shadow">
+            <h2 class="text-2xl font-bold text-gray-800">LLM Conversation Display</h2>
+            <img class="max-h-70vh max-w-full w-auto object-contain" src="../../imgs/bench_gui/conversation.png"/>
+            <button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600" onclick="closePopup('popup_conversation')">Close</button>
+        </div>
+    </div>
+
+    <div id="popup_statistics1" class="hidden fixed top-0 left-0 right-0 bottom-0 bg-gray-900/50 flex items-center justify-center z-20 transition-opacity duration-300 ease-in-out">
+        <div class="bg-white p-6 rounded-lg custom-shadow">
+            <h2 class="text-2xl font-bold text-gray-800">LLM Statistics 1</h2>
+            <img class="max-h-70vh max-w-full w-auto object-contain" src="../../imgs/bench_gui/statistics1.png"/>
+            <button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600" onclick="closePopup('popup_statistics1')">Close</button>
+        </div>
+    </div>
+
+    <div id="popup_prompts" class="hidden fixed top-0 left-0 right-0 bottom-0 bg-gray-900/50 flex items-center justify-center z-20 transition-opacity duration-300 ease-in-out">
+        <div class="bg-white p-6 rounded-lg custom-shadow">
+            <h2 class="text-2xl font-bold text-gray-800">LLM Prompts</h2>
+            <img class="max-h-70vh max-w-full w-auto object-contain" src="../../imgs/bench_gui/prompts.png"/>
+            <button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600" onclick="closePopup('popup_prompts')">Close</button>
+        </div>
+    </div>
+
+    <div id="page-container" class="flex flex-col min-h-screen">
+        <header class="bg-white shadow fixed top-0 left-0 right-0 z-10">
+            <div class="container mx-auto px-6 py-4">
+                <div class="flex justify-between items-center">
+                    <a class="text-xl font-bold text-gray-800">Custom VSCode Copilot Extension</a>
+                    <div class="flex space-x-4">
+                        <a href="./efficiency.html" class="px-3 py-2 text-gray-800 text-sm hover:text-indigo-500 cursor-pointer">Back</a>
+                        <a class="px-3 py-2 text-gray-800 text-sm hover:text-indigo-500 cursor-pointer" onclick="openPopup('about')">About</a>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <div id="content-wrap" class="mt-16 mb-16">
+            <section class="container mx-auto px-6 py-10">
+                <article class="prose text-gray-700 w-full max-w-none">
+                    <div id="markdown-output"></div>
+                </article>
+            </section>
+        </div>
+        <footer class="bg-white shadow fixed bottom-0 left-0 right-0 z-10">
+            <div class="container mx-auto px-6 py-4">
+                <p class="text-center text-gray-800">© 2025 CHAU Yu Hei</p>
+            </div>
+        </footer>
+    </div>
+
+    <script type="text/plain" id="markdown"># Estimation
+## Background
+To estimate the $\text{s}/\text{tok}$ of the LLM, [recall that](./efficiency.html) the benchmark is run on a specified list of multi-turn conversations, which has multiple
+calls to the model for generating tokens for completion. For each model generation, we can record the following information:
+
+ * The number of tokens
+    * Context tokens
+    * Generation tokens
+    * Cached tokens
+    * Non-cached tokens
+ * Time elapsed
+
+A token can be exactly one of $\{ \text{context}, \text{generation} \}$, and it can be exactly one of $\{ \text{cached}, \text{non-cached} \}$. The time elapsed is the total time
+used to both process the context tokens, and generate the generated tokens. Whether a token at position $i$ is cached or not is determined by whether the prefix $\text{toks}[0:i + 1]$
+is present in a previous generation, which roughly corresponds to how paged KV-cache works (disregarding the fact that tokens are grouped in blocks in the cache).
+
+The data we have is therefore a tuple (context cached, context non-cached, generation cached, generation non-cached, time elapsed) for each generation, written as $(c_{ic}, c_{in}, g_{ic}, g_{in}, T_i)$ for $1 \leq i \leq M$
+number of generations, after the grouping conditions specified by the GUI.
+
+## Assumptions
+For simplicity, we consider the time taken for each token to be constant, only depending on which model / backend / configuration used and on the type of token (context / generation, cached / non-cached).
+The main problem of this assumption is that it does not account for the fact that the time taken for each token may vary depending on the position of the token in the sequence, due to quadratic complexity of
+the attention mechanism. As we are evaluating relatively short sequences, this simplifying assumption can be made.
+
+We also assume that the variance of the time taken for each token to be a constant that does not depend on the type of the token or the position of the token in the sequence, so that a generalized
+linear model can be used.
+
+## General strategy for estimation
+In full generality, we consider $N$ types of tokens, and the problem can be cast as a (special) linear regression problem of estimating coefficients
+$$\sum_{k=1}^N c_{ik}\beta_k \approx T_i$$
+
+where the $\beta$ are the coefficients that represent the $\text{s}/\text{tok}$, and $c_{ik}$ are the counts of number of tokens there are in each type, and $N$ is the number of types.
+However, the error variance is
+
+$$E[\epsilon_i^2] = (\sum_{k=1}^N c_{ik})\sigma^2$$
+
+where $\sigma^2$ is the variance in the time taken for each token, which is assumed to be constant. The log-likelihood will then be proportional to
+$$ \sum_{i=1}^M  -\frac{1}{2} \cdot \frac{(T_i - \sum_{k=1}^N c_{ik}\beta_k)^2}{(\sum_{k=1}^N c_{ik})\sigma^2}$$
+
+by plugging into the PDF of normal distribution. Therefore, this becomes a weighted least squares problem with weight $w_i = \frac{1}{\sum_{k=1}^N c_{ik}}$ (inverse of number of tokens regardless of type).
+
+## Application of general strategy
+For estimating the $\text{s}/\text{tok}$ of four types of tokens given by context / generation, cached / non-cached, we set $N=4$ above and $c_{ik}$ to be the corresponding counts. With the assumption that whether
+caching is used does not affect the time much, we set $N=2$ above and compute the $\text{s}/\text{tok}$ for the context and generation tokens. Note that when $N=1$, the solution reduces to taking a simple average, as it can be shown
+$$\argmin_\beta \sum_{i=1}^N \frac{(T_i - c_i\beta)^2}{c_i} \Longleftrightarrow \beta=\frac{\sum_{i=1}^N T_i}{\sum_{i=1}^N c_i} = \frac{\text{Total Time}}{\text{Total Number of Tokens}}$$
+        </script>
+        <script>
+            var markdownText = document.getElementById("markdown").textContent;
+            var htmlContent = marked.parse(markdownText);
+            const mdDiv = document.getElementById('markdown-output');
+            mdDiv.innerHTML = htmlContent;
+            renderMathInElement(mdDiv, {
+                delimiters: [
+                    { left: "$$", right: "$$", display: true },
+                    { left: "$", right: "$", display: false }
+                ]
+            });
+        </script>
+    </body>
+</html>

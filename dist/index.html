@@ -48,7 +48,7 @@
         <div class="bg-white p-6 rounded-lg max-w-md custom-shadow">
             <h2 class="text-2xl font-bold text-gray-800">About</h2>
             <p class="mt-4 text-gray-600 text-justify">
-              This website showcases an (incomplete) implementation of a code completion system based on the Qwen2.5-Coder family of models. It contains a VSCode extension that sends code snippets to a server, which then returns a single line
+              This website showcases an (ongoing) implementation of a code completion system based on the Qwen2.5-Coder family of models. It contains a VSCode extension that sends code snippets to a server, which then returns a single line
               completion suggestion. The server is implemented in Python using a custom API server for logins, and a custom message queue for handling requests from multiple clients into a single thread for running the model on GPU. The client
               is implemented in TypeScript using the VSCode extension development API, and additionally contains some custom GUIs for displaying differences between two code snippets for comparison.
             </p>
@@ -60,7 +60,7 @@
         <header class="bg-white shadow fixed top-0 left-0 right-0 z-10">
             <div class="container mx-auto px-6 py-4">
                 <div class="flex justify-between items-center">
-                    <p class="text-xl font-bold text-gray-800">Parser Project Showcase</a>
+                    <p class="text-xl font-bold text-gray-800">Custom VSCode Copilot Extension</a>
                     <div class="flex space-x-4">
                         <a class="px-3 py-2 text-gray-800 text-sm hover:text-indigo-500 cursor-pointer" onclick="openPopup('about')">About</a>
                     </div>
@@ -71,6 +71,20 @@
         <div id="content-wrap" class="mt-16 mb-16">
             <section class="container mx-auto px-6 py-10">
                 <div class="flex flex-wrap -mx-3">
+                    <div class="w-full sm:w-1/2 lg:w-1/3 px-3 mb-6">
+                        <div class="bg-white shadow-lg rounded-lg overflow-hidden flex flex-col h-full">
+                            <img class="w-full h-56 object-cover object-center" src="../imgs/bench_gui/conversation.png" alt="Project Image">
+                            <div class="p-4 flex flex-col flex-grow">
+                                <h3 class="text-xl font-bold text-gray-800">LLM Helper</h3>
+                                <p class="mt-2 text-gray-600 text-justify">
+                                    Utility library and various visualization toolkits to assist in the inference and conversion of LLM models,
+                                    in particular TensorRT-LLM models and benchmarking various aspects (toks/s, GPU utilization etc) of the model.
+                                </p>
+                                <a href="llm_helper/index.html" class="mt-auto text-indigo-500 hover:text-indigo-600 hover:underline">Read more</a>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="w-full sm:w-1/2 lg:w-1/3 px-3 mb-6">
                         <div class="bg-white shadow-lg rounded-lg overflow-hidden flex flex-col h-full">
                             <img class="w-full h-56 object-cover object-center" src="../imgs/parser.png" alt="Project Image">
@@ -88,7 +102,7 @@
 
                     <div class="w-full sm:w-1/2 lg:w-1/3 px-3 mb-6">
                         <div class="bg-white shadow-lg rounded-lg overflow-hidden flex flex-col h-full">
-                            <img class="w-full h-56 object-cover object-center" src="https://via.placeholder.com/600x400" alt="Project Image">
+                            <img class="w-full h-56 object-cover object-center" src="../imgs/client_server_overview.png" alt="Project Image">
                             <div class="p-4 flex flex-col flex-grow">
                                 <h3 class="text-xl font-bold text-gray-800">Custom client/server API library</h3>
                                 <p class="mt-2 text-gray-600 text-justify">
@@ -96,52 +110,65 @@
                                     API for handling logins and logouts, and stores the user login sessions in memory. The client contains convenience
                                     functions for logging in with a username and password, and logging out from the server.
                                 </p>
-                                <a href="client_server/client-server.html" class="mt-auto text-indigo-500 hover:text-indigo-600 hover:underline">Read more</a>
+                                <a href="client_server/index.html" class="mt-auto text-indigo-500 hover:text-indigo-600 hover:underline">Read more</a>
                             </div>
                         </div>
                     </div>
 
                     <div class="w-full sm:w-1/2 lg:w-1/3 px-3 mb-6">
                       <div class="bg-white shadow-lg rounded-lg overflow-hidden flex flex-col h-full">
-                          <img class="w-full h-56 object-cover object-center" src="https://via.placeholder.com/600x400" alt="Project Image">
+                          <img class="w-full h-56 object-cover object-center" src="../imgs/task_scheduling_overview.png" alt="Project Image">
                           <div class="p-4 flex flex-col flex-grow">
-                              <h3 class="text-xl font-bold text-gray-800">Custom message passing library</h3>
+                              <h3 class="text-xl font-bold text-gray-800">Custom task scheduling library</h3>
                               <p class="mt-2 text-gray-600 text-justify">
-                                  A message passing API similar to the RabbitMQ+Celery stack which allows resource intensive jobs (e.g model inference) to be run
+                                  A task scheduling API similar to the RabbitMQ+Celery stack which allows resource intensive jobs (e.g model inference) to be run
                                   in a single thread, while allowing multiple clients to initiate queued requests concurrently.
                               </p>
-                              <a href="message-passing.html" class="mt-auto text-indigo-500 hover:text-indigo-600 hover:underline">Read more</a>
+                              <a href="task_scheduling/index.html" class="mt-auto text-indigo-500 hover:text-indigo-600 hover:underline">Read more</a>
                           </div>
                       </div>
                     </div>
 
-                  <div class="w-full sm:w-1/2 lg:w-1/3 px-3 mb-6">
-                    <div class="bg-white shadow-lg rounded-lg overflow-hidden flex flex-col h-full">
-                        <img class="w-full h-56 object-cover object-center" src="https://via.placeholder.com/600x400" alt="Project Image">
-                        <div class="p-4 flex flex-col flex-grow">
-                            <h3 class="text-xl font-bold text-gray-800">VSCode extension</h3>
-                            <p class="mt-2 text-gray-600 text-justify">
-                                A VSCode extension that handles the completion of TypeScript and Python code snippets by sending the code snippet
-                                to the Model Serving API server, which then returns a single line completion suggestion.
-                            </p>
-                            <a href="vscode-extension.html" class="mt-auto text-indigo-500 hover:text-indigo-600 hover:underline">Read more</a>
+                    <div class="w-full sm:w-1/2 lg:w-1/3 px-3 mb-6">
+                        <div class="bg-white shadow-lg rounded-lg overflow-hidden flex flex-col h-full">
+                            <img class="w-full h-56 object-cover object-center" src="../imgs/code_difference.png" alt="Project Image">
+                            <div class="p-4 flex flex-col flex-grow">
+                                <h3 class="text-xl font-bold text-gray-800">Code Edit Suggestions Web Components</h3>
+                                <p class="mt-2 text-gray-600 text-justify">
+                                    Web Components for displaying multi-line edits between two code snippets. The component uses Myer's algorithm
+                                    to find the difference between two code snippets.
+                                </p>
+                                <a href="edit_components/index.html" class="mt-auto text-indigo-500 hover:text-indigo-600 hover:underline">Read more</a>
+                            </div>
                         </div>
                     </div>
-                  </div>
 
-                  <div class="w-full sm:w-1/2 lg:w-1/3 px-3 mb-6">
-                    <div class="bg-white shadow-lg rounded-lg overflow-hidden flex flex-col h-full">
-                        <img class="w-full h-56 object-cover object-center" src="https://via.placeholder.com/600x400" alt="Project Image">
-                        <div class="p-4 flex flex-col flex-grow">
-                            <h3 class="text-xl font-bold text-gray-800">Model Serving API</h3>
-                            <p class="mt-2 text-gray-600 text-justify">
-                                A model serving API server that runs Qwen2.5-Coder on a GPU, and returns a single line completion suggestion for a given code snippet.
-                            </p>
-                            <a href="copilot-server.html" class="mt-auto text-indigo-500 hover:text-indigo-600 hover:underline">Read more</a>
+                    <div class="w-full sm:w-1/2 lg:w-1/3 px-3 mb-6">
+                        <div class="bg-white shadow-lg rounded-lg overflow-hidden flex flex-col h-full">
+                            <img class="w-full h-56 object-cover object-center" src="../imgs/copilot.png" alt="Project Image">
+                            <div class="p-4 flex flex-col flex-grow">
+                                <h3 class="text-xl font-bold text-gray-800">VSCode extension</h3>
+                                <p class="mt-2 text-gray-600 text-justify">
+                                    A VSCode extension that handles the completion of TypeScript and Python code snippets by sending the code snippet
+                                    to the Model Serving API server, which then returns a single line completion suggestion.
+                                </p>
+                                <a href="vscode-extension.html" class="mt-auto text-indigo-500 hover:text-indigo-600 hover:underline">Read more</a>
+                            </div>
                         </div>
                     </div>
-                  </div>
 
+                    <div class="w-full sm:w-1/2 lg:w-1/3 px-3 mb-6">
+                        <div class="bg-white shadow-lg rounded-lg overflow-hidden flex flex-col h-full">
+                            <img class="w-full h-56 object-cover object-center" src="../imgs/serving_api.png" alt="Project Image">
+                            <div class="p-4 flex flex-col flex-grow">
+                                <h3 class="text-xl font-bold text-gray-800">Copilot Serving API</h3>
+                                <p class="mt-2 text-gray-600 text-justify">
+                                    A model serving API server that runs Qwen2.5-Coder on a GPU, and returns a single line completion suggestion for a given code snippet.
+                                </p>
+                                <a href="copilot-server.html" class="mt-auto text-indigo-500 hover:text-indigo-600 hover:underline">Read more</a>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </section>
         </div>

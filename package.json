@@ -4,10 +4,13 @@
     "tailwindcss": "^4.0.3"
   },
   "scripts": {
-    "build": "npx tailwindcss -i ./src/input.css -o ./dist/output.css",
+    "build": "npx tailwindcss -i ./src/input.css -o ./dist/output.css && npx webpack",
     "watch": "npx tailwindcss -i ./src/input.css -o ./dist/output.css --watch"
   },
   "devDependencies": {
-    "@tailwindcss/typography": "^0.5.16"
+    "@tailwindcss/typography": "^0.5.16",
+    "ts-loader": "^9.5.2",
+    "typescript": "^5.7.3",
+    "webpack-cli": "^6.0.1"
   }
 }

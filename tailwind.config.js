@@ -13,6 +13,12 @@ module.exports = {
           'full': '100%',
           'none': 'none',
         },
+        textColor: {
+          'blue-500': '#4299e1',
+          'red-500': '#f56565',
+          'green-500': '#48bb78',
+          'yellow-500': '#ecc94b',
+        },
         width: {
           'auto': 'auto',
         },

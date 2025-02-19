@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LLM Efficiency Benchmark GUI</title>
+    <link href="../output.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/styles/default.min.css">
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+        }
+
+        #page-container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        #content-wrap {
+            flex: 1;
+            overflow-y: auto;
+            padding-bottom: 4rem;
+        }
+
+        .custom-shadow {
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+
+    <script>
+        function openPopup(id) {
+            const popup = document.getElementById(id);
+            popup.classList.remove("hidden");
+            document.body.classList.add("overflow-hidden");
+        }
+
+        function closePopup(id) {
+            const popup = document.getElementById(id);
+            popup.classList.add("hidden");
+            document.body.classList.remove("overflow-hidden");
+        }
+    </script>
+</head>
+<body class="bg-gray-100">
+    <div id="about" class="hidden fixed top-0 left-0 right-0 bottom-0 bg-gray-900/50 flex items-center justify-center z-20 transition-opacity duration-300 ease-in-out">
+        <div class="bg-white p-6 rounded-lg max-w-md custom-shadow">
+            <h2 class="text-2xl font-bold text-gray-800">About</h2>
+            <p class="mt-4 text-gray-600 text-justify">
+              This website showcases an (ongoing) implementation of a code completion system based on the Qwen2.5-Coder family of models. It contains a VSCode extension that sends code snippets to a server, which then returns a single line
+              completion suggestion. The server is implemented in Python using a custom API server for logins, and a custom message queue for handling requests from multiple clients into a single thread for running the model on GPU. The client
+              is implemented in TypeScript using the VSCode extension development API, and additionally contains some custom GUIs for displaying differences between two code snippets for comparison.
+            </p>
+            <button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600" onclick="closePopup('about')">Close</button>
+        </div>
+    </div>
+
+    <div id="popup_conversation" class="hidden fixed top-0 left-0 right-0 bottom-0 bg-gray-900/50 flex items-center justify-center z-20 transition-opacity duration-300 ease-in-out">
+        <div class="bg-white p-6 rounded-lg custom-shadow">
+            <h2 class="text-2xl font-bold text-gray-800">LLM Conversation Display</h2>
+            <img class="max-h-70vh max-w-full w-auto object-contain" src="../../imgs/bench_gui/conversation.png"/>
+            <button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600" onclick="closePopup('popup_conversation')">Close</button>
+        </div>
+    </div>
+
+    <div id="popup_statistics1" class="hidden fixed top-0 left-0 right-0 bottom-0 bg-gray-900/50 flex items-center justify-center z-20 transition-opacity duration-300 ease-in-out">
+        <div class="bg-white p-6 rounded-lg custom-shadow">
+            <h2 class="text-2xl font-bold text-gray-800">LLM Statistics 1</h2>
+            <img class="max-h-70vh max-w-full w-auto object-contain" src="../../imgs/bench_gui/statistics1.png"/>
+            <button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600" onclick="closePopup('popup_statistics1')">Close</button>
+        </div>
+    </div>
+
+    <div id="popup_prompts" class="hidden fixed top-0 left-0 right-0 bottom-0 bg-gray-900/50 flex items-center justify-center z-20 transition-opacity duration-300 ease-in-out">
+        <div class="bg-white p-6 rounded-lg custom-shadow">
+            <h2 class="text-2xl font-bold text-gray-800">LLM Prompts</h2>
+            <img class="max-h-70vh max-w-full w-auto object-contain" src="../../imgs/bench_gui/prompts.png"/>
+            <button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600" onclick="closePopup('popup_prompts')">Close</button>
+        </div>
+    </div>
+
+    <div id="page-container" class="flex flex-col min-h-screen">
+        <header class="bg-white shadow fixed top-0 left-0 right-0 z-10">
+            <div class="container mx-auto px-6 py-4">
+                <div class="flex justify-between items-center">
+                    <a class="text-xl font-bold text-gray-800">Custom VSCode Copilot Extension</a>
+                    <div class="flex space-x-4">
+                        <a href="./index.html" class="px-3 py-2 text-gray-800 text-sm hover:text-indigo-500 cursor-pointer">Back</a>
+                        <a class="px-3 py-2 text-gray-800 text-sm hover:text-indigo-500 cursor-pointer" onclick="openPopup('about')">About</a>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <div id="content-wrap" class="mt-16 mb-16">
+            <section class="container mx-auto px-6 py-10">
+                <div class="flex flex-col">
+                    <h1 class="text-3xl font-bold text-gray-800">LLM Efficiency Benchmark</h1>
+                    <p class="mt-2 text-gray-600 text-justify">This is GUI for visualization benchmark results with regards to LLM models. The models with different configurations are built
+                        in bulk using the <a href="./conversion.html" class="text-indigo-500 hover:underline">LLM Conversion Tool</a> and benchmarked by running them through different
+                        fixed prompts. The statistics such as time taken, GPU usage, memory usage, number of context/generation/cached/non-cached tokens are recorded in the benchmark.
+                        The GUI can subsequently load the raw statistics and visualize aggregrate results grouped by model configurations, so decisions can be made on which model to use.
+                    </p>
+                    <div class="flex flex-col justify-center h-auto w-full">
+                        <video class="max-h-30vh max-w-full w-auto object-contain" src="../../resources/video_demo.webm" autoplay controls></video>
+                        <p class="mt-2 text-center">
+                            Video demo of the LLM Efficiency Benchmark GUI
+                        </p>
+                    </div>
+                    <h2 class="text-2xl font-bold text-gray-800 mt-4">Stratification</h2>
+                    <p class="mt-2 text-gray-600 text-justify">The benchmark results can be stratified by the following configurations:</p>
+                    <ul class="list-disc list-inside text-gray-600">
+                        <li>Model Type</li>
+                        <li>Quantization Configuration</li>
+                        <li>GPU Configurations
+                            <ul class="list-disc list-inside ml-6">
+                                <li>Single GPU</li>
+                                <li>Dual GPU</li>
+                                <li>Pipeline Parallel</li>
+                                <li>Tensor Parallel</li>
+                            </ul>
+                        </li>
+                        <li>Backends
+                            <ul class="list-disc list-inside ml-6">
+                                <li>HuggingFace</li>
+                                <li>TensorRT-LLM</li>
+                            </ul>
+                        </li>
+                    </ul>
+                    <h2 class="text-2xl font-bold text-gray-800 mt-4">Conversation View</h2>
+                    <p class="mt-2 text-gray-600 text-justify">
+                        The conversation view allows the user to inspect the outputs of a particular model's output given a particular multi-turn conversation, enabling to check
+                        whether the model is able to generate the correct responses. The benchmark/program does not check the correctness of the response as its main purpose is to
+                        gather the statistics related to the model's speed and utilization instead of correctness.
+                    </p>
+                    <div class="flex flex-col justify-center h-auto w-full">
+                        <img class="max-h-30vh max-w-full w-auto object-contain" src="../../imgs/bench_gui/conversation.png" onclick="openPopup('popup_conversation');"/>
+                        <p class="mt-2 text-center">
+                            Annotations in red. Click image to enlarge.
+                        </p>
+                    </div>
+                    <h3 class="text-1xl font-bold text-gray-800 mt-4">1. Multi-Turn Conversations</h3>
+                    <p class="mt-2 text-gray-600 text-justify">
+                        The conversation view contains a list of predefined multi-turn conversations, where each conversation contains a list of messages.
+                        The user can select which multi-turn conversation to display. For an interactive example, please refer to <a class="mt-auto text-indigo-500 hover:text-indigo-600 hover:underline" href="./templates.html">the templates site</a>.
+                    </p>
+                    <h3 class="text-1xl font-bold text-gray-800 mt-4">2. Particular Prompt</h3>
+                    <p class="mt-2 text-gray-600 text-justify">
+                        This list are all the prompts in the selected multi-turn conversation. The user can select which prompt within the multi-turn conversation to view,
+                        and the GUI will highlight the prompt in the entire conversation on the right, and also display the relevant time interval the model has used within the
+                        graphs below (indicated by dashed red and green vertical lines in [4], [5]). 
+                    </p>
+                    <h3 class="text-1xl font-bold text-gray-800 mt-4">3. Model Inference Configuration</h3>
+                    <p class="mt-2 text-gray-600 text-justify">
+                        This part of the GUI allows the user to select the entire configuration used to run the model, including the model type, backend, quantization methods and so on.
+                        The user can select which configuration to view, and the GUI will display the relevant statistics.
+                    </p>
+                    <h3 class="text-1xl font-bold text-gray-800 mt-4">4. Inference Graphs</h3>
+                    <p class="mt-2 text-gray-600 text-justify">
+                        The inference graphs display statistics gathered during a single selected inference configuration in [3]. The time interval is over the entire duration of running
+                        inference on the configuration, over all multi-turn conversations in the list in [1]. The graphs display the following statistics (obtained via nvidia-smi):
+                    </p>
+                    <ul class="list-disc list-inside text-gray-600">
+                        <li>GPU Power Draw</li>
+                        <li>GPU Memory Usage</li>
+                        <li>GPU Utilization</li>
+                    </ul>
+                    <p class="mt-2 text-gray-600 text-justify">
+                        This allows the user to inspect the GPU usage and memory usage, and determine whether the pipeline under utilizes the available GPUs. If so, adjustment of batch size,
+                        model size, or other tweaks can be done to improve the serving efficiency or the intelligence of the model by selecting a larger model.
+                    </p>
+                    <h3 class="text-1xl font-bold text-gray-800 mt-4">5. Zoomed Inference Graphs</h3>
+                    <p class="mt-2 text-gray-600 text-justify">
+                        The zoomed inference graphs display the same statistics as [4], but zoomed in to a particular time interval within the red and green dashed vertical lines, where it is determined by
+                        the selection in [2].
+                    </p>
+                    <h2 class="text-2xl font-bold text-gray-800 mt-4">Statistics View</h2>
+                    <p class="mt-2 text-gray-600 text-justify">
+                        The statistics view allows the user to inspect the statistics gathered during the efficiency benchmark, and visualize the statistics given a particular way of stratifiying the data and
+                        ordering the data. The relevant costs per token can then be computed.
+                    </p>
+                    <div class="flex flex-col justify-center h-auto w-full">
+                        <img class="max-h-30vh max-w-full w-auto object-contain" src="../../imgs/bench_gui/statistics1.png" onclick="openPopup('popup_statistics1');"/>
+                        <p class="mt-2 text-center">
+                            Annotations in red. Click image to enlarge.
+                        </p>
+                    </div>
+                    <p class="mt-2 text-gray-600 text-justify">
+                        The computation pipeline of the statistics view works just like a SQL SELECT statement, supporting restriction to a
+                        specific criteria (WHERE [3]), aggregration of the data (GROUP BY [5]), and ordering of the data (ORDER BY [4]).
+                        The aggregration [1] and cost [2] statistics will then be computed per groups, and displayed in the GUI with respect to the ordering.
+                    </p>
+                    <h3 class="text-1xl font-bold text-gray-800 mt-4">1. Aggregrates</h3>
+                    <p class="mt-2 text-gray-600 text-justify">
+                        This displays a histogram of the different kinds of tokens (context, generation, cached, non-cached) in each category of the stratification specified by the user in [5].
+                    </p>
+                    <h3 class="text-1xl font-bold text-gray-800 mt-4">2. Cost (in seconds)</h3>
+                    <p class="mt-2 text-gray-600 text-justify">
+                        This displays on average how much time in seconds it takes to generate a single token. It uses a simplifying assumption that the time taken for each token
+                        only depends on the type of token (context, generation, cached, non-cached) and the model used (model type, backend, quantization method, etc). This is not actually
+                        true for longer texts, due to the quadratic nature of the model's attention mechanism. Here are the supported configurations that can be displayed:
+                    </p>
+                    <div class="flex flex-wrap -mx-3">
+                        <div class="w-full sm:w-1/2 lg:w-1/3 px-3 mb-6">
+                            <div class="bg-white shadow-lg rounded-lg overflow-hidden flex flex-col h-full">
+                                <img class="w-full object-cover object-center" src="../../imgs/bench_gui/statistics2.png" alt="Stats Display">
+                                <div class="p-4 flex flex-col flex-grow">
+                                    <h3 class="text-m font-bold text-gray-800">Simple Average</h3>
+                                    <p class="mt-2 text-gray-600 text-justify">
+                                        This simply computes the average of the time taken for each token in each group regardless of which type of token it is.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+    
+                        <div class="w-full sm:w-1/2 lg:w-1/3 px-3 mb-6">
+                            <div class="bg-white shadow-lg rounded-lg overflow-hidden flex flex-col h-full">
+                                <img class="w-full object-cover object-center" src="../../imgs/bench_gui/statistics3.png" alt="Stats Display">
+                                <div class="p-4 flex flex-col flex-grow">
+                                    <h3 class="text-m font-bold text-gray-800">Context and generation</h3>
+                                    <p class="mt-2 text-gray-600 text-justify">
+                                        This computes the average over the context and generation tokens in each group, and ignores whether the token is cached or not.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+    
+                        <div class="w-full sm:w-1/2 lg:w-1/3 px-3 mb-6">
+                          <div class="bg-white shadow-lg rounded-lg overflow-hidden flex flex-col h-full">
+                              <img class="w-full object-cover object-center" src="../../imgs/bench_gui/statistics4.png" alt="Stats Display">
+                              <div class="p-4 flex flex-col flex-grow">
+                                  <h3 class="text-m font-bold text-gray-800">Context, generation, cached and non-cached</h3>
+                                  <p class="mt-2 text-gray-600 text-justify">
+                                        This computes the average over the context and generation tokens in each group, and also takes into account whether the token is cached or not.
+                                  </p>
+                              </div>
+                          </div>
+                        </div>
+                    </div>
+                    <p class="mt-2 text-gray-600 text-justify">
+                        Please refer to the <a class="text-indigo-500 hover:underline" href="./estimation.html">estimation page</a> for more details on how the s/tok are estimated.
+                    </p>
+                    <h3 class="text-1xl font-bold text-gray-800 mt-4">3. Data Subset Selection</h3>
+                    <p class="mt-2 text-gray-600 text-justify">
+                        This allows the user to select which subset of the data to display in the statistics view. For maximum generality, the user can construct rules according to
+                        a disjunctive normal form in the GUI, which can be used to filter the data according to the information types (columns). This works similarly to the SQL WHERE clause.
+                    </p>
+                    <h3 class="text-1xl font-bold text-gray-800 mt-4">4. Ordering</h3>
+                    <p class="mt-2 text-gray-600 text-justify">
+                        This allows the user to order the data in the aggregrates [1] and statistics [2] view according to a precedence of columns using drag and drop behaviour. The first
+                        information type (column) has the highest precedence, and the last column has the lowest precedence, meaning that the same values in the first column will be placed together, while the
+                        same values in the last column will be most dispersed. They are generally sorted by lexiographical order.
+                    </p>
+                    <h3 class="text-1xl font-bold text-gray-800 mt-4">5. Grouping</h3>
+                    <p class="mt-2 text-gray-600 text-justify">
+                        This chooses the grouping of the data used to compute the statistics. Contrary to SQL, when a column is checked, the column will become ungrouped. By default, all columns are
+                        grouped, and the statistics are computed for all the data. When a column is ungrouped, the statistics are computed for each unique value in the column, allowing comparison between
+                        different configurations according to the selected columns.
+                    </p>
+                    <h2 class="text-2xl font-bold text-gray-800 mt-4">Prompts View</h2>
+                    <p class="mt-2 text-gray-600 text-justify">
+                        This is a simple view that allows the user to inspect which prompts and multi-turn conversations are used in the benchmark.
+                    </p>
+                    <div class="flex flex-col justify-center h-auto w-full">
+                        <img class="max-h-30vh max-w-full w-auto object-contain" src="../../imgs/bench_gui/prompts.png" onclick="openPopup('popup_prompts');"/>
+                        <p class="mt-2 text-center">
+                            Click image to enlarge.
+                        </p>
+                    </div>
+                </div>
+            </section>
+        </div>
+        <footer class="bg-white shadow fixed bottom-0 left-0 right-0 z-10">
+            <div class="container mx-auto px-6 py-4">
+                <p class="text-center text-gray-800">© 2025 CHAU Yu Hei</p>
+            </div>
+        </footer>
+    </div>
+</body>
+</html>
