@@ -1,2 +1,0 @@
-# ParserProjectShowcase
-Parser project showcase
